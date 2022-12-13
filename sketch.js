@@ -9,8 +9,10 @@ const refInput = document.getElementById("ref");
 
 // input
 
+let isMouse = false;
 let mouseDown = false;
 let kbdPressed = 0;
+let touchPressed = 0;
 
 const channels = [];
 // initialed with 10 channels, 
@@ -21,7 +23,7 @@ const channels = [];
 
 // sound settings
 
-let waveform = "sine";
+let waveform = "sawtooth";
 let baseFreq = 220;
 let baseOscDown = 1200;
 
@@ -33,13 +35,12 @@ let edo = 12;
 let ratios = [[4, 5, 6, 7]];
 
 
-
-
 function setup() {
   cnv = createCanvas(windowWidth-20, 600).parent(container);
   cnv.touchStarted(handleTouchStart);
   cnv.touchMoved(handleTouchMove);
   cnv.touchEnded(handleTouchEnd);
+  cnv.mouseOver(() => {isMouse = true;});
   textFont('monospace');
   rectMode(CORNERS);
   
@@ -270,7 +271,7 @@ function draw() {
   pop()
   
   //const names = channels.map((channel) => channel.source);
-  //const names = playedRatios.join(",") + " " + playedSteps.join(",");
+  //const names = playedCents.map((c) => Math.round(c)).join(",") + "  " + playedRatios.join(",") + "  " + playedSteps.join(",");
   //text(names, 20, height-20)
 }
 
@@ -304,6 +305,7 @@ function exactChannel(source, id) {
 
 
 function mouseDragged() {
+  if (!isMouse) return
   if (outsideCanvas(mouseX, mouseY)) return;
   
   const channel = channels[firstChannel("mouse")];
@@ -315,6 +317,7 @@ function mouseDragged() {
 }
 
 function mousePressed() {
+  if (!isMouse) return
   if (outsideCanvas(mouseX, mouseY)) return;
   
   mouseDown = true;
@@ -332,6 +335,7 @@ function mousePressed() {
 }
 
 function mouseReleased() {
+  if (!isMouse) return
   mouseDown = false;
   
   const channel = channels[firstChannel("mouse")];
@@ -355,6 +359,7 @@ function handleTouchStart(event) {
     const x = touch.clientX; const y = touch.clientY;
     if (outsideCanvas(x, y)) return;
     
+    touchPressed++;
     const channel = channels[firstChannel("off")];
     if (channel !== undefined) {
       setFromScreenXY(channel, x, y);
@@ -390,8 +395,9 @@ function handleTouchMove(event) {
 function handleTouchEnd(event) {
   event.changedTouches.forEach((touch) => {
     const id = touch.identifier;
-    const x = touch.clientX; const y = touch.clientY;
+    //const x = touch.clientX; const y = touch.clientY;
     
+    touchPressed--;
     const channel = channels[exactChannel("touch", id)];
     if (channel !== undefined) {
       channel.source = "off";
@@ -452,7 +458,7 @@ function keyReleased() {
 }
 
 function nothingOn() {
-  return (!mouseDown && kbdPressed === 0 && touches.length === 0)
+  return (!mouseDown && kbdPressed === 0 && touchPressed === 0)
 }
 
 function setFromScreenXY(channel, x, y) {
