@@ -122,11 +122,10 @@ function playUp() {
   print("end!")
 }
 function stepperButtonClicked(offset) {
-  if (edo > 1) {
-    edo += offset;
-    edoInput.value = edo;
-    draw();
-  }
+  edo += offset;
+  edo = max(edo, 2);
+  edoInput.value = edo;
+  draw();
 }
 
 
