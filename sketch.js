@@ -121,6 +121,13 @@ function playDown() {
 function playUp() {
   print("end!")
 }
+function stepperButtonClicked(offset) {
+  if (edo > 1) {
+    edo += offset;
+    edoInput.value = edo;
+    draw();
+  }
+}
 
 
 // Collect inputs per visualization method
@@ -526,11 +533,10 @@ function drawCentsMarker(cents) {
   line(xPos, yTop, xPos, yBot)
 }
 function drawRatioButton(i) {
-  //const xPos = map(i, -centsDown, centsUp, 60, width-60)
   const notes = ratios[0];
   const leftEdge = map(i, 0, notes.length, 20, width-20);
   const rightEdge = map(i+1, 0, notes.length, 20, width-20);
-  rect(leftEdge, 50, rightEdge, 200-50);
+  rect(leftEdge, 50, rightEdge, 200-20);
   fill("#0DD");
   noStroke();
   text(notes[i]+"/"+notes[0], leftEdge+6, 50+15);
@@ -538,7 +544,7 @@ function drawRatioButton(i) {
 function drawEDOButton(i) {
   const leftEdge = map(i, 0, edo+1, 20, width-20);
   const rightEdge = map(i+1, 0, edo+1, 20, width-20);
-  rect(leftEdge, 50, rightEdge, 200-50);
+  rect(leftEdge, 50, rightEdge, 200-20);
   fill("#BBB");
   noStroke();
   text(i, leftEdge+6, 50+15);
