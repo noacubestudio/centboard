@@ -11,43 +11,46 @@
   </head>
   <body>
     <main>
-      <div id="canvas-container" touch-action="none"></div>  
+      <div id="top-container">
+        <label>
+          <span>EDO (Divide Octave):</span>
+          <input type="number" id="edo" value="12" />
+          <button class="stepper" type="button" onclick="stepperButtonClicked(-1)"> -1</button>
+          <button class="stepper" type="button" onclick="stepperButtonClicked(+1)"> +1</button>
+        </label>
+        <label>
+          <span>Ratios</span>
+          <input type="text" id="ratios" value="4:5:6:7:8"/>
+        </label>
+      </div>
+
+      <div id="canvas-container" touch-action="none"></div>
       
-      <label>
-        <span class="rowlabel">Middle Freq.</span>
-        <input type="number" id="base" value="220" />
-        <span>Hz</span>
-      </label>
-      <label>
-        <span class="rowlabel">Reference Tone</span>
-        <input type="number" id="ref" value="1200" />
-        <span>cents lower</span>
-      </label>
-      <label>
-        <span class="rowlabel">Divide octave</span>
-        <input type="number" id="edo" value="12" />
-        <span>EDO</span>
-        <button class="stepper" type="button" onclick="stepperButtonClicked(-1)"> -1</button>
-        <button class="stepper" type="button" onclick="stepperButtonClicked(+1)"> +1</button>
-      </label>
-      <label>
-        <span class="rowlabel">Ratios</span>
-        <input type="text" id="ratios" value="4:5:6:7:8"/>
-<!--         <button class="playButton" type="button" onmousedown="playDown()" onmouseup="playUp()">play</button> -->
-      </label>
-      <label>
-        <span class="rowlabel">Waveform</span>
-        <div id="waveforms">
-          <input type="radio" id="c1" name="waveform" value="sine" onclick="waveformRadioClicked(this)">
-          <label for="c1">Sine</label>
-          <input type="radio" id="c2" name="waveform" value="square" onclick="waveformRadioClicked(this)">
-          <label for="c2">Square</label>
-          <input type="radio" id="c3" name="waveform" value="triangle" onclick="waveformRadioClicked(this)">
-          <label for="c3">Triangle</label>
-          <input type="radio" id="c4" name="waveform" value="sawtooth" onclick="waveformRadioClicked(this)" checked>
-          <label for="c4">Sawtooth</label>
-        </div>
-      </label>
+      <div id="bottom-container">
+        <label>
+          <span class="rowlabel">Waveform</span>
+          <div id="waveforms">
+            <input type="radio" id="c1" name="waveform" value="sine" onclick="waveformRadioClicked(this)">
+            <label for="c1">Sine</label>
+            <input type="radio" id="c2" name="waveform" value="square" onclick="waveformRadioClicked(this)">
+            <label for="c2">Square</label>
+            <input type="radio" id="c3" name="waveform" value="triangle" onclick="waveformRadioClicked(this)">
+            <label for="c3">Triangle</label>
+            <input type="radio" id="c4" name="waveform" value="sawtooth" onclick="waveformRadioClicked(this)" checked>
+            <label for="c4">Sawtooth</label>
+          </div>
+        </label>
+        <label>
+          <span class="rowlabel">Middle Freq.</span>
+          <input type="number" id="base" value="220" />
+          <span>Hz</span>
+        </label>
+        <label>
+          <span class="rowlabel">Reference Tone</span>
+          <input type="number" id="ref" value="1200" />
+          <span>cents lower</span>
+        </label>
+      </div>
     </main>
     <script src="sketch.js"></script>
   </body>

@@ -63,7 +63,7 @@ function setup() {
     if (i === 0) {
       osc.freq(frequency(baseFreq, -baseOscDown));
       sourceProperties = {
-        cents: -baseOscDown, ratiostep: 0, edostep: 0
+        cents: -baseOscDown, ratiostep: -1, edostep: -1
       }
     }
     channels.push({osc: osc, source: source, sourceProperties: sourceProperties});
@@ -198,7 +198,7 @@ function draw() {
   
   ratios.forEach((ratio) => {
     if (ratio.length >= 2) {
-      for (let i = 1; i < ratio.length; i++) { 
+      for (let i = 0; i < ratio.length; i++) { 
         const ratioCents = cents(ratio[0], ratio[i]);
         
         if (ratioCents >= 0) {
@@ -244,7 +244,7 @@ function draw() {
     
     
     fill("#0DD")
-    text("Ratio chord keyboard, one octave", 20, 30)
+    text(ratios[0].join(":") + " Ratio Keyboard (Multiplied by "+baseFreq+" Hz)", 20, 30);
     
     noFill()
     for (let i = 0; i < ratios[0].length; i++) {
@@ -268,9 +268,7 @@ function draw() {
   // lower part again
   translate(0, 200)
   if (edo > 1) {
-    fill("#BBB")
-    text(edo + " EDO chord keyboard, one octave", 20, 30)
-    
+    translate(0, -40);
     noFill()
     for (let i = 0; i < edo+1; i++) {
       let playingStep = false;
@@ -288,6 +286,9 @@ function draw() {
       }
       drawEDOButton(i)
     }
+    translate(0, 40);
+    fill("#BBB")
+    text(edo + " EDO Keyboard (Octave above "+baseFreq+" Hz)", 20, 200-30)
   }
   pop()
   
@@ -377,7 +378,7 @@ function handleTouchStart(event) {
   event.preventDefault();
   event.changedTouches.forEach((touch) => {
     const id = touch.identifier;
-    const x = touch.clientX; const y = touch.clientY;
+    const x = touch.clientX; const y = touch.clientY - 60;
     if (outsideCanvas(x, y)) return;
     
     touchPressed++;
@@ -401,7 +402,7 @@ function handleTouchStart(event) {
 function handleTouchMove(event) {
   event.changedTouches.forEach((touch) => {
     const id = touch.identifier;
-    const x = touch.clientX; const y = touch.clientY;
+    const x = touch.clientX; const y = touch.clientY - 60;
     if (outsideCanvas(x, y)) return;
     
     const channel = channels[exactChannel("touch", id)];
@@ -416,7 +417,7 @@ function handleTouchMove(event) {
 function handleTouchEnd(event) {
   event.changedTouches.forEach((touch) => {
     const id = touch.identifier;
-    //const x = touch.clientX; const y = touch.clientY;
+    //const x = touch.clientX; const y = touch.clientY - 60;
     
     touchPressed--;
     const channel = channels[exactChannel("touch", id)];
