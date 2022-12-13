@@ -68,6 +68,11 @@ function setup() {
     }
     channels.push({osc: osc, source: source, sourceProperties: sourceProperties});
   }
+
+  baseInput.value = baseFreq;
+  edoInput.value = edo;
+  ratiosInput.value = ratios[0].join(":");
+  refInput.value = baseOscDown;
   
   baseInput.addEventListener('input', (e) => {
     const inputValue = Number(e.target.value);
@@ -94,7 +99,7 @@ function setup() {
     ratios = ratiosString.split(" ").map(substr => substr.split(":"));
     draw();
   });
-  
+
   refInput.addEventListener('input', (e) => {
     const inputValue = Number(e.target.value);
     if (!isNaN(inputValue) && inputValue >= 0) {
