@@ -32,7 +32,7 @@ let baseOscDown = 1200;
 let centsDown = 1400;
 let centsUp = 2000;
 let edo = 12;
-let ratios = [[4, 5, 6, 7]];
+let ratios = [[4, 5, 6, 7, 8]];
 
 
 function setup() {
@@ -162,19 +162,30 @@ function updatePlayed() {
 
 function draw() {
   background("black")
-  textAlign(CENTER);
+  textAlign(LEFT);
+  textSize(10);
   
   updatePlayed();
   
   stroke("#666")
   const stepCents = 1200/edo;
-  for(let i = 0; i < centsDown; i += stepCents) {
+  for(let i = stepCents; i < centsDown; i += stepCents) {
     drawCentsMarker(-i)
   }
   for(let i = 0; i < centsUp; i += stepCents) {
     drawCentsMarker(i)
+
+    const scaleStep = Math.round(i/stepCents)
+    if (scaleStep <= edo) {
+      noStroke()
+      fill("#333")
+      text(scaleStep, map(i, -centsDown, centsUp, 0, width)+5, 58);
+      stroke("#666")
+    }
   }
- 
+
+  textAlign(CENTER);
+  textSize(12);
   stroke("#FFF")
   drawCentsMarker(0);
   
