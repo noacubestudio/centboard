@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.5.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.5.0/addons/p5.sound.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no, shrink-to-fit=no" />
+    <meta name="HandheldFriendly" content="true">
+
+  </head>
+  <body>
+    <main>
+      <div id="canvas-container" touch-action="none"></div>  
+      
+      <label>
+        <span>Middle Freq.</span>
+        <input type="number" id="base" value="220" />
+        <span>Hz</span>
+      </label>
+      <label>
+        <span>Reference Tone</span>
+        <input type="number" id="ref" value="1200" />
+        <span>cents lower</span>
+      </label>
+      <label>
+        <span>Divide octave</span>
+        <input type="number" id="edo" value="12" />
+        <span>EDO</span>
+      </label>
+      <label>
+        <span>Ratios</span>
+        <input type="text" id="ratios" value="4:5:6:7"/>
+<!--         <button class="playButton" type="button" onmousedown="playDown()" onmouseup="playUp()">play</button> -->
+      </label>
+      <label>
+        <span>Waveform</span>
+        <div id="waveforms">
+          <input type="radio" id="c1" name="waveform" value="sine" onclick="waveformRadioClicked(this)" checked>
+          <label for="c1">Sine</label>
+          <input type="radio" id="c2" name="waveform" value="square" onclick="waveformRadioClicked(this)">
+          <label for="c2">Square</label>
+          <input type="radio" id="c3" name="waveform" value="triangle" onclick="waveformRadioClicked(this)">
+          <label for="c3">Triangle</label>
+          <input type="radio" id="c4" name="waveform" value="sawtooth" onclick="waveformRadioClicked(this)">
+          <label for="c4">Sawtooth</label>
+        </div>
+      </label>
+    </main>
+    <script src="sketch.js"></script>
+  </body>
+</html>
+

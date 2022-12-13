@@ -1,0 +1,72 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    background-color: #050505;
+    font-family: monospace;
+    font-size: 15px;
+  }
+  canvas {
+    display: block;
+  }
+  input {
+    padding: 4px;
+    color: white;
+    background-color: black;
+    border-radius: 4px;
+    border: 1px #446 solid;
+  }
+  
+  input:focus {
+    outline: none;
+    background-color: #111;
+  }
+  
+  input[type="number"] {
+    width: 4em;
+  }
+  input[type="text"] {
+    width: 18em;
+  }
+  
+  label {
+    color: white;
+    margin-left: 20px;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  span {
+    width: 8em;
+    color: #ddd;
+  }
+  
+  #waveforms {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  #waveforms > label {
+    margin: 0px;
+  }
+  
+  button {
+    color: white;
+    background-color: #446;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-family: monospace;
+  }
+  
+  button:hover {
+    background-color: #668;
+  }
+  
+  button:active {
+    background-color: #222;
+  }
+  
+  
