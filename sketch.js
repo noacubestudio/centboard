@@ -23,6 +23,7 @@ const channels = [];
 
 // sound settings
 
+let lpFilter;
 let waveform = "sawtooth";
 let baseFreq = 220;
 let baseOscDown = 1200;
@@ -43,6 +44,8 @@ function setup() {
   cnv.mouseOver(() => {isMouse = true;});
   textFont('monospace');
   rectMode(CORNERS);
+
+  lpFilter = new p5.LowPass();
   
   // initialize all channels
   for (let i = 0; i < 10; i++) {
@@ -51,6 +54,8 @@ function setup() {
     let osc = new p5.Oscillator();
     let sourceProperties = {};
     
+    osc.disconnect();
+    osc.connect(lpFilter);
     osc.setType(waveform);
     osc.freq(baseFreq)
     osc.amp(0.5);
@@ -92,7 +97,7 @@ function setup() {
   
   refInput.addEventListener('input', (e) => {
     const inputValue = Number(e.target.value);
-    if (!isNaN(inputValue) && inputValue > 0) {
+    if (!isNaN(inputValue) && inputValue >= 0) {
       baseOscDown = inputValue;
       const refChannel = channels[0];
       refChannel.osc.freq(frequency(baseFreq, -baseOscDown));
@@ -185,12 +190,11 @@ function draw() {
 
   textAlign(CENTER);
   textSize(12);
-  stroke("#FFF")
-  drawCentsMarker(0);
-  
-  stroke("#CCC")
-  drawCentsMarker(1200);
-  drawCentsMarker(-1200);
+  stroke("#DDD")
+  fill("#DDD")
+  drawCentsMarker(0, true);
+  drawCentsMarker(1200, true);
+  drawCentsMarker(-1200, true);
   
   ratios.forEach((ratio) => {
     if (ratio.length >= 2) {
@@ -536,21 +540,47 @@ function canvasSegment(y) {
   return "edo"
 }
 
-function drawCentsMarker(cents) {
-  const xPos = map(cents, -centsDown, centsUp, 0, width)
-  const yTop = 50
-  const yBot = 200 - 50
-  line(xPos, yTop, xPos, yBot)
+function drawCentsMarker(cents, octave) {
+  const xPos = map(cents, -centsDown, centsUp, 0, width);
+  const gap = 50;
+  const yTop = gap;
+  const yBot = 200 - gap;
+  line(xPos, yTop, xPos, yBot);
+  if (octave !== undefined) {
+    ellipse(xPos, yTop, 6);
+    ellipse(xPos, yBot, 6);
+  }
 }
 function drawRatioButton(i) {
   const notes = ratios[0];
   const leftEdge = map(i, 0, notes.length, 20, width-20);
   const rightEdge = map(i+1, 0, notes.length, 20, width-20);
   rect(leftEdge, 50, rightEdge, 200-20);
-  fill("#0DD");
   noStroke();
-  text(notes[i]+"/"+notes[0], leftEdge+6, 50+15);
+
+  let a = Number(notes[i]);
+  let b = Number(notes[0]);
+
+  fill("#0DD");
+  text([a,b].join("/"), leftEdge+6, 50+15);
+
+  //can't simplify
+  if (a < b) return
+
+  fill("#0AA");
+  if (a % b === 0) {
+    text("("+a/b+")", leftEdge+6, 50+30);
+    return;
+  }
+  // simplify fraction
+  const simpleRatio = reduce(a,b);
+  let sa = simpleRatio[0]; sb = simpleRatio[1];
+
+  if (a !== sa) {
+    text("("+[sa,sb].join("/")+")", leftEdge+6, 50+30);
+  }
 }
+
 function drawEDOButton(i) {
   const leftEdge = map(i, 0, edo+1, 20, width-20);
   const rightEdge = map(i+1, 0, edo+1, 20, width-20);
@@ -577,11 +607,21 @@ function screenXtoEdo(x) {
 // distance between two frequencies in cents
 function cents(a, b) {
   if (b === a) return 0;
-  if (b % a === 0) return 1200;
-  return 1200 * Math.log2(b / a) % 1200;
+  //if (b % a === 0) return 1200;
+  return 1200 * Math.log2(b / a); //% 1200;
 }
 
 // frequency after going certain distance in cents
 function frequency(base, cents) {
   return base * Math.pow(2, cents / 1200);
+}
+
+function reduce(numerator, denominator) {
+  let a = numerator;
+  let b = denominator;
+  let c;
+  while (b) {
+    c = a % b; a = b; b = c;
+  }
+  return [numerator / a, denominator / a];
 }
