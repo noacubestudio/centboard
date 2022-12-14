@@ -12,16 +12,19 @@
   <body>
     <main>
       <div id="top-container">
-        <label>
+        <div id="settingsGroup">
           <span>EDO (Divide Octave):</span>
           <input type="number" id="edo" value="" />
           <button class="stepper" type="button" onclick="stepperButtonClicked(-1)"> -1</button>
           <button class="stepper" type="button" onclick="stepperButtonClicked(+1)"> +1</button>
-        </label>
-        <label>
+        </div>
+        <div id="settingsGroup">
           <span>Ratios</span>
+          <button class="slotButton buttonSelected" id="slotButton1" type="button" onclick="ratioSlotButtonClicked(0)">A</button>
+          <button class="slotButton" id="slotButton2" type="button" onclick="ratioSlotButtonClicked(1)">B</button>
+          <button class="slotButton" id="slotButton3" type="button" onclick="ratioSlotButtonClicked(2)">C</button>
           <input type="text" id="ratios" value=""/>
-        </label>
+        </div>
       </div>
 
       <div id="canvas-container" touch-action="none"></div>

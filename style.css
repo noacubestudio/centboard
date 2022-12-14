@@ -59,6 +59,14 @@ label {
   align-items: center;
   gap: 2px;
 }
+#settingsGroup {
+  color: white;
+  margin-left: 20px;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
 
 span {
   margin-inline: 4px;
@@ -87,10 +95,14 @@ button {
   font-family: monospace;
 }
 
-button:hover {
+.buttonSelected {
+  background-color: rgb(70, 70, 211);
+}
+
+button:not(.buttonSelected):hover {
   background-color: #668;
 }
 
-button:active {
+button:not(.buttonSelected):active {
   background-color: #222;
 }

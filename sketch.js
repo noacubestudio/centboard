@@ -6,6 +6,11 @@ const baseInput = document.getElementById("base");
 const edoInput = document.getElementById("edo");
 const ratiosInput = document.getElementById("ratios");
 const refInput = document.getElementById("ref");
+const slotButtons = [
+  document.getElementById("slotButton1"),
+  document.getElementById("slotButton2"),
+  document.getElementById("slotButton3")
+];
 
 // input
 
@@ -34,7 +39,9 @@ let centsDown = 1400;
 let centsUp = 2000;
 let edo = 12;
 let stepCents = 1200/edo;
-let ratios = [[24,27,30,32,36,40,45,48]];
+
+let ratioSlot = 0;
+let ratios = [[24,27,30,32,36,40,45,48],[4,5,6,7,8],[]];
 
 
 function setup() {
@@ -72,7 +79,7 @@ function setup() {
 
   baseInput.value = baseFreq;
   edoInput.value = edo;
-  ratiosInput.value = ratios[0].join(":");
+  ratiosInput.value = ratios[ratioSlot].join(":");
   refInput.value = baseOscDown;
   
   baseInput.addEventListener('input', (e) => {
@@ -95,10 +102,7 @@ function setup() {
   });
   
   ratiosInput.addEventListener('input', (e) => {
-    const onlyDigitsAndColons = new RegExp("[^0-9:]");
-    const onlyColonsBetweenDigits = new RegExp(":[^0-9]|[^0-9]:|^:|:$");
-    const ratiosString = e.target.value.replace(onlyDigitsAndColons, "").replace(onlyColonsBetweenDigits, "");
-    ratios = ratiosString.split(" ").map(substr => substr.split(":"));
+    ratioUpdated(e.target, e.target.value);
     draw();
   });
 
@@ -120,6 +124,34 @@ function windowResized() {
   resizeCanvas(windowWidth-20, 600);
 }
 
+function ratioSlotButtonClicked(index) {
+  // update slot
+  ratioSlot = index;
+  ratioUpdated(ratiosInput, ratios[ratioSlot].join(":"));
+
+  // update styling of the buttons to show new selected and change the text
+  slotButtons.forEach((slot, sIndex) => {
+    if (sIndex === index) {
+      slot.classList.add('buttonSelected');
+    } else {
+      slot.classList.remove('buttonSelected');
+    }
+  });
+
+  draw();
+}
+
+function ratioUpdated(el, input) {
+  // undo any unwanted symbols and set the updated 
+  const correctSymbolString = input.replace(new RegExp("[^0-9:]"), "");
+  el.value = correctSymbolString;
+
+  // only colons between digits! cap off first and last for further processing
+  const ratiosString = correctSymbolString.replace(new RegExp(":[^0-9]|[^0-9]:|^:|:$"), "");
+
+  // update array
+  ratios[ratioSlot] = ratiosString.split(":");
+}
 
 function waveformRadioClicked(el) {
   waveform = el.value;
@@ -207,26 +239,25 @@ function draw() {
   // filled below, for later use when showing distance to these ratios in cents
   const midOctaveRatioCents = [];
   
-  ratios.forEach((ratio) => {
-    if (ratio.length >= 2) {
-      for (let i = 0; i < ratio.length; i++) { 
-        const ratioCents = cents(ratio[0], ratio[i]);
-        
-        if (ratioCents >= 0) {
-          stroke("#0DD");
-          drawCentsMarker(ratioCents);
-          noStroke();
-          fill("#0DD");
-          text(ratio[0], map(ratioCents, -centsDown, centsUp, 0, width), 200-13);
-          text(ratio[i], map(ratioCents, -centsDown, centsUp, 0, width), 200-27);
+  const ratio = ratios[ratioSlot];
+  if (ratio.length >= 2) {
+    for (let i = 0; i < ratio.length; i++) { 
+      const ratioCents = cents(ratio[0], ratio[i]);
+      
+      if (ratioCents >= 0) {
+        stroke("#0DD");
+        drawCentsMarker(ratioCents);
+        noStroke();
+        fill("#0DD");
+        drawTextForRatioMarker(ratio[i], ratio[0], ratioCents);
 
-          if (ratioCents <= 1200) {
-            midOctaveRatioCents.push(ratioCents);
-          }
+        if (ratioCents <= 1200) {
+          midOctaveRatioCents.push(ratioCents);
         }
       }
     }
-  })
+  }
+
   midOctaveRatioCents.sort((a, b) => {a < b});
 
   // draw played cents
@@ -256,13 +287,13 @@ function draw() {
   // lower part
   push();
   translate(0, 200);
-  if (ratios[0].length > 1) {
+  if (ratios[ratioSlot].length > 1) {
     
     fill("#0DD");
-    text(ratios[0].join(":") + " Ratio Keyboard (Multiplied by "+baseFreq+" Hz)", 20, 30);
+    text(ratios[ratioSlot].join(":") + " Ratio Keyboard (Multiplied by "+baseFreq+" Hz)", 20, 30);
     
     noFill();
-    for (let i = 0; i < ratios[0].length; i++) {
+    for (let i = 0; i < ratios[ratioSlot].length; i++) {
       let playingRatio = false;
       for (let p = 0; p < playedRatios.length; p++) {
         if (i === playedRatios[p] && playedRatios.length > 1) {
@@ -528,10 +559,10 @@ function setFromScreenXY(channel, x, y) {
     channel.osc.freq(frequency(baseFreq, channelCents));
     
   } else if (canvasSegment(y) === "keyboard") { // ratio keyboard
-    if (ratios[0].length > 1) {
+    if (ratios[ratioSlot].length > 1) {
       const channelRatiostep = screenXtoRatio(x);
       channel.sourceProperties.ratiostep = channelRatiostep;
-      const channelCents = cents(ratios[0][0], ratios[0][channelRatiostep]);
+      const channelCents = cents(ratios[ratioSlot][0], ratios[ratioSlot][channelRatiostep]);
       channel.sourceProperties.cents = channelCents;
       // set freq
       channel.osc.freq(frequency(baseFreq, channelCents));
@@ -585,34 +616,61 @@ function drawCentsMarker(cents, octave) {
     ellipse(xPos, yBot, 6);
   }
 }
+
+function drawTextForRatioMarker (a, b, ratioCents) {
+  const simplified = simplifiedRatio(a, b, [a, b]);
+  const topString = simplified[0];
+  const botString = simplified[1];
+
+  if (botString === undefined) {
+    text(topString, map(ratioCents, -centsDown, centsUp, 0, width), 200-22);
+    return;
+  }
+
+  text(topString, map(ratioCents, -centsDown, centsUp, 0, width), 200-27);
+  text(botString, map(ratioCents, -centsDown, centsUp, 0, width), 200-13);
+}
+
+function simplifiedRatio(a, b, fallback) {
+  // return undefined if the ratio can not be simplified.
+  // otherwise, return the simplified version.
+
+  if (a < b) return fallback;
+
+  // example: 8/4 to 2
+  //if (a % b === 0) return [a/b];
+
+  // example: 6/4 to 3/2
+  const simple = reduce(a, b);
+  const sa = simple[0];
+  const sb = simple[1];
+
+  return (a !== sa) ? [sa, sb] : fallback;
+}
+
 function drawRatioButton(i) {
-  const notes = ratios[0];
+  const notes = ratios[ratioSlot];
   const leftEdge = map(i, 0, notes.length, 20, width-20);
   const rightEdge = map(i+1, 0, notes.length, 20, width-20);
   rect(leftEdge, 50, rightEdge, 200-20);
   noStroke();
 
-  let a = Number(notes[i]);
-  let b = Number(notes[0]);
+  const a = Number(notes[i]);
+  const b = Number(notes[0]);
 
   fill("#0DD");
   text([a,b].join("/"), leftEdge+6, 50+15);
 
-  //can't simplify
-  if (a < b) return
+  // simplify with fallback: undefined
+  const simplified = simplifiedRatio(a, b, [undefined]);
+
+  //first check if undefined to return instantly
+  if (simplified[0] === undefined) return;
+
+  const simplifiedString = "(" + simplified.join("/") + ")";
 
   fill("#0AA");
-  if (a % b === 0) {
-    text("("+a/b+")", leftEdge+6, 50+30);
-    return;
-  }
-  // simplify fraction
-  const simpleRatio = reduce(a,b);
-  let sa = simpleRatio[0]; sb = simpleRatio[1];
-
-  if (a !== sa) {
-    text("("+[sa,sb].join("/")+")", leftEdge+6, 50+30);
-  }
+  text(simplifiedString, leftEdge+6, 50+30);
 }
 
 function drawEDOButton(i, closest) {
@@ -639,7 +697,7 @@ function screenXtoCents(x) {
 }
 
 function screenXtoRatio(x) {
-  const notes = ratios[0];
+  const notes = ratios[ratioSlot];
   return Math.floor(map(x, 20, width-20, 0, notes.length))
 }
 
