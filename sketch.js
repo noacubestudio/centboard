@@ -33,6 +33,7 @@ let baseOscDown = 1200;
 let centsDown = 1400;
 let centsUp = 2000;
 let edo = 12;
+let stepCents = 1200/edo;
 let ratios = [[4, 5, 6, 7, 8]];
 
 
@@ -88,6 +89,7 @@ function setup() {
     const inputValue = Number(e.target.value);
     if (!isNaN(inputValue) && inputValue > 0) {
       edo = inputValue;
+      stepCents = 1200/edo;
       draw();
     }
   });
@@ -134,6 +136,7 @@ function playUp() {
 function stepperButtonClicked(offset) {
   edo += offset;
   edo = max(edo, 2);
+  stepCents = 1200/edo;
   edoInput.value = edo;
   draw();
 }
@@ -177,7 +180,7 @@ function draw() {
   updatePlayed();
   
   stroke("#666");
-  const stepCents = 1200/edo;
+
   for(let i = stepCents; i < centsDown; i += stepCents) {
     drawCentsMarker(-i);
   }
@@ -318,7 +321,7 @@ function draw() {
     }
     translate(0, 40);
     fill("#BBB");
-    text(edo + " EDO Keyboard (Octave above "+baseFreq+" Hz)", 20, 200-30);
+    text(edo + " EDO Keyboard (Octave above "+baseFreq+" Hz, step size "+Number(stepCents.toFixed(2))+")", 20, 200-30);
   }
   pop();
   
@@ -620,9 +623,13 @@ function drawEDOButton(i, closest) {
   noStroke();
   text(i, leftEdge+6, 50+15);
   if (closest !== undefined) {
-    const rangeDist = Math.abs(closest)/50;
-    fill(lerpColor(color("#0DD"), color("#055"), rangeDist));
+    const rangeDist = Math.abs(closest)/(stepCents*0.5);
+    fill(lerpColor(color("#00FFFFDD"), color("#00FFFF55"), rangeDist));
     text(Math.round(closest) + "c", leftEdge+6, 50+30);
+    fill(lerpColor(color("#00FFFF22"), color("#00FFFF11"), rangeDist));
+    const roomSize = min((230/2)/2, (rightEdge-leftEdge)/2)
+    const discSize = map(rangeDist,0,1,roomSize*1.5,0)
+    ellipse(map(closest/(stepCents*0.5),-1,1,leftEdge+discSize/2,rightEdge-discSize/2),230/2, discSize)
   }
 }
 
