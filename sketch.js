@@ -170,36 +170,39 @@ function updatePlayed() {
 
 
 function draw() {
-  background("black")
+  background("black");
   textAlign(LEFT);
   textSize(10);
   
   updatePlayed();
   
-  stroke("#666")
+  stroke("#666");
   const stepCents = 1200/edo;
   for(let i = stepCents; i < centsDown; i += stepCents) {
-    drawCentsMarker(-i)
+    drawCentsMarker(-i);
   }
   for(let i = 0; i < centsUp; i += stepCents) {
-    drawCentsMarker(i)
+    drawCentsMarker(i);
 
-    const scaleStep = Math.round(i/stepCents)
+    const scaleStep = Math.round(i/stepCents);
     if (scaleStep <= edo) {
-      noStroke()
-      fill("#333")
+      noStroke();
+      fill("#333");
       text(scaleStep, map(i, -centsDown, centsUp, 0, width)+5, 58);
-      stroke("#666")
+      stroke("#666");
     }
   }
 
   textAlign(CENTER);
   textSize(12);
-  stroke("#DDD")
-  fill("#DDD")
+  stroke("#DDD");
+  fill("#DDD");
   drawCentsMarker(0, true);
   drawCentsMarker(1200, true);
   drawCentsMarker(-1200, true);
+
+  // filled below, for later use when showing distance to these ratios in cents
+  const midOctaveRatioCents = [];
   
   ratios.forEach((ratio) => {
     if (ratio.length >= 2) {
@@ -207,22 +210,27 @@ function draw() {
         const ratioCents = cents(ratio[0], ratio[i]);
         
         if (ratioCents >= 0) {
-          stroke("#0DD")
-          drawCentsMarker(ratioCents)
-          noStroke()
-          fill("#0DD")
-          text(ratio[0], map(ratioCents, -centsDown, centsUp, 0, width), 200-13)
-          text(ratio[i], map(ratioCents, -centsDown, centsUp, 0, width), 200-27)
+          stroke("#0DD");
+          drawCentsMarker(ratioCents);
+          noStroke();
+          fill("#0DD");
+          text(ratio[0], map(ratioCents, -centsDown, centsUp, 0, width), 200-13);
+          text(ratio[i], map(ratioCents, -centsDown, centsUp, 0, width), 200-27);
+
+          if (ratioCents <= 1200) {
+            midOctaveRatioCents.push(ratioCents);
+          }
         }
       }
     }
   })
-  
+  midOctaveRatioCents.sort((a, b) => {a < b});
+
   // draw played cents
   playedCents.forEach((c) => {
     stroke("orange");
     drawCentsMarker(c);
-    noStroke()
+    noStroke();
     fill("orange");
     text(Math.round(c) + " c", map(c, -centsDown, centsUp, 0, width), 20);
     const f = frequency(baseFreq, c);
@@ -230,8 +238,8 @@ function draw() {
   });
 
   
-  noStroke()
-  fill("#BBB")
+  noStroke();
+  fill("#BBB");
   textAlign(LEFT);
   // let playedCentsText = "";
   // for (let p = 1; p < playedCents.length; p++) {
@@ -243,15 +251,14 @@ function draw() {
   
     
   // lower part
-  push()
-  translate(0, 200)
+  push();
+  translate(0, 200);
   if (ratios[0].length > 1) {
     
-    
-    fill("#0DD")
+    fill("#0DD");
     text(ratios[0].join(":") + " Ratio Keyboard (Multiplied by "+baseFreq+" Hz)", 20, 30);
     
-    noFill()
+    noFill();
     for (let i = 0; i < ratios[0].length; i++) {
       let playingRatio = false;
       for (let p = 0; p < playedRatios.length; p++) {
@@ -260,22 +267,24 @@ function draw() {
         }
       }
       if (playingRatio) {
-        stroke("#0AA")
-        fill("#022")
+        stroke("#0AA");
+        fill("#022");
       } else {
-        stroke("#0AA")
-        noFill()
+        stroke("#0AA");
+        noFill();
       }
-      drawRatioButton(i)
+      drawRatioButton(i);
     }
   }
   
   // lower part again
-  translate(0, 200)
+  translate(0, 200);
   if (edo > 1) {
     translate(0, -40);
-    noFill()
+    noFill();
     for (let i = 0; i < edo+1; i++) {
+
+      // is this step currently playing?
       let playingStep = false;
       for (let p = 0; p < playedSteps.length; p++) {
         if (i === playedSteps[p] && playedSteps.length > 1) {
@@ -283,19 +292,35 @@ function draw() {
         }
       }
       if (playingStep) {
-        stroke("#666")
-        fill("#333")
+        stroke("#666");
+        fill("#333");
       } else {
-        stroke("#666")
-        noFill()
+        stroke("#666");
+        noFill();
       }
-      drawEDOButton(i)
+
+      // what ratios are closest?
+      let closest = undefined;
+      if (midOctaveRatioCents.length > 0) {
+        // only check halfway around the note with the first ratio, remove from array if found
+        // so the next edostep won't check it again
+        const distance = midOctaveRatioCents[0] - i * stepCents;
+        if (Math.abs(distance) < stepCents/2) {
+          closest = distance;
+          midOctaveRatioCents.shift()
+        } else if (distance < 0) {
+          midOctaveRatioCents.shift()
+        }
+      }
+
+      // draw
+      drawEDOButton(i, closest);
     }
     translate(0, 40);
-    fill("#BBB")
-    text(edo + " EDO Keyboard (Octave above "+baseFreq+" Hz)", 20, 200-30)
+    fill("#BBB");
+    text(edo + " EDO Keyboard (Octave above "+baseFreq+" Hz)", 20, 200-30);
   }
-  pop()
+  pop();
   
   //const names = channels.map((channel) => channel.source);
   //const names = playedCents.map((c) => Math.round(c)).join(",") + "  " + playedRatios.join(",") + "  " + playedSteps.join(",");
@@ -587,13 +612,18 @@ function drawRatioButton(i) {
   }
 }
 
-function drawEDOButton(i) {
+function drawEDOButton(i, closest) {
   const leftEdge = map(i, 0, edo+1, 20, width-20);
   const rightEdge = map(i+1, 0, edo+1, 20, width-20);
   rect(leftEdge, 50, rightEdge, 200-20);
   fill("#BBB");
   noStroke();
   text(i, leftEdge+6, 50+15);
+  if (closest !== undefined) {
+    const rangeDist = Math.abs(closest)/50;
+    fill(lerpColor(color("#0DD"), color("#055"), rangeDist));
+    text(Math.round(closest) + "c", leftEdge+6, 50+30);
+  }
 }
 
 
