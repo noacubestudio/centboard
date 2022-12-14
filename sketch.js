@@ -271,19 +271,9 @@ function draw() {
     text(Math.round(f*10)/10 + " Hz", map(c, -centsDown, centsUp, 0, width), 40);
   });
 
-  
-  noStroke();
-  fill("#BBB");
   textAlign(LEFT);
-  // let playedCentsText = "";
-  // for (let p = 1; p < playedCents.length; p++) {
-  //   playedCentsText += Math.round(playedCents[p])
-  // }
-  // if (playedCentsText.length > 0) {
-  //   text(playedCentsText + " cents", 20, 20)
-  // }
-  
-    
+  noStroke();
+
   // lower part
   push();
   translate(0, 200);
@@ -291,8 +281,9 @@ function draw() {
     
     fill("#0DD");
     text(ratios[ratioSlot].join(":") + " Ratio Keyboard (Multiplied by "+baseFreq+" Hz)", 20, 30);
-    
-    noFill();
+
+    textAlign(CENTER);
+
     for (let i = 0; i < ratios[ratioSlot].length; i++) {
       let playingRatio = false;
       for (let p = 0; p < playedRatios.length; p++) {
@@ -315,7 +306,8 @@ function draw() {
   translate(0, 200);
   if (edo > 1) {
     translate(0, -40);
-    noFill();
+    textAlign(CENTER);
+
     for (let i = 0; i < edo+1; i++) {
 
       // is this step currently playing?
@@ -350,6 +342,7 @@ function draw() {
       // draw
       drawEDOButton(i, closest);
     }
+    textAlign(LEFT);
     translate(0, 40);
     fill("#BBB");
     text(edo + " EDO Keyboard (Octave above "+baseFreq+" Hz, step size "+Number(stepCents.toFixed(2))+")", 20, 200-30);
@@ -652,6 +645,9 @@ function drawRatioButton(i) {
   const notes = ratios[ratioSlot];
   const leftEdge = map(i, 0, notes.length, 20, width-20);
   const rightEdge = map(i+1, 0, notes.length, 20, width-20);
+  const centerX = 0.5 * (leftEdge + rightEdge);
+  const centerY = 230/2;
+
   rect(leftEdge, 50, rightEdge, 200-20);
   noStroke();
 
@@ -659,7 +655,7 @@ function drawRatioButton(i) {
   const b = Number(notes[0]);
 
   fill("#0DD");
-  text([a,b].join("/"), leftEdge+6, 50+15);
+  text([a,b].join("/"), centerX, centerY-45);
 
   // simplify with fallback: undefined
   const simplified = simplifiedRatio(a, b, [undefined]);
@@ -670,24 +666,27 @@ function drawRatioButton(i) {
   const simplifiedString = "(" + simplified.join("/") + ")";
 
   fill("#0AA");
-  text(simplifiedString, leftEdge+6, 50+30);
+  text(simplifiedString, centerX,centerY-30);
 }
 
 function drawEDOButton(i, closest) {
   const leftEdge = map(i, 0, edo+1, 20, width-20);
   const rightEdge = map(i+1, 0, edo+1, 20, width-20);
+  const centerX = 0.5 * (leftEdge + rightEdge);
+  const centerY = 230/2;
+
   rect(leftEdge, 50, rightEdge, 200-20);
   fill("#BBB");
   noStroke();
-  text(i, leftEdge+6, 50+15);
+  text(i, centerX, centerY-45);
   if (closest !== undefined) {
     const rangeDist = Math.abs(closest)/(stepCents*0.5);
-    fill(lerpColor(color("#00FFFFDD"), color("#00FFFF55"), rangeDist));
-    text(Math.round(closest) + "c", leftEdge+6, 50+30);
-    fill(lerpColor(color("#00FFFF22"), color("#00FFFF11"), rangeDist));
+    fill(lerpColor(color("#00FFFFBB"), color("#00FFFF66"), rangeDist));
+    text(Math.round(closest) + "c", centerX, centerY+3);
+    fill(lerpColor(color("#00FFFF22"), color("#00FFFF22"), rangeDist));
     const roomSize = min((230/2)/2, (rightEdge-leftEdge)/2)
     const discSize = map(rangeDist,0,1,roomSize*1.5,0)
-    ellipse(map(closest/(stepCents*0.5),-1,1,leftEdge+discSize/2,rightEdge-discSize/2),230/2, discSize)
+    ellipse(map(closest/(stepCents*0.5),-1,1,leftEdge+discSize/2,rightEdge-discSize/2),centerY, discSize)
   }
 }
 
