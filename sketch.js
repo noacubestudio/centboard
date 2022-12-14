@@ -34,7 +34,7 @@ let centsDown = 1400;
 let centsUp = 2000;
 let edo = 12;
 let stepCents = 1200/edo;
-let ratios = [[4, 5, 6, 7, 8]];
+let ratios = [[24,27,30,32,36,40,45,48]];
 
 
 function setup() {
