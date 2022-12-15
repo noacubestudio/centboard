@@ -100,7 +100,7 @@ function setup() {
   
   edoInput.addEventListener('input', (e) => {
     const inputValue = Number(e.target.value);
-    if (!isNaN(inputValue) && inputValue > 0) {
+    if (!isNaN(inputValue) && inputValue > 1) {
       edo = inputValue;
       stepCents = 1200/edo;
       draw();
@@ -290,9 +290,10 @@ function draw() {
   // lower part
   push();
   translate(0, 200);
+  fill("#0DD");
+
   if (ratios[ratioSlot].length > 1) {
     
-    fill("#0DD");
     text(ratios[ratioSlot].join(":") + " Ratio Keyboard (Multiplied by "+baseFreq+" Hz)", 20, 30);
 
     textAlign(CENTER);
@@ -313,6 +314,9 @@ function draw() {
       }
       drawRatioButton(i);
     }
+  } else {
+    // fallback graphic
+    text("Waiting for ratios input... (increasing numbers separated by \":\" like 9:10:12)", 20, 30);
   }
   
   // lower part again
