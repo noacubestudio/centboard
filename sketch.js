@@ -252,17 +252,17 @@ function draw() {
   // filled below, for later use when showing distance to these ratios in cents
   const midOctaveRatioCents = [];
   
-  const ratio = ratios[ratioSlot];
-  if (ratio.length >= 2) {
-    for (let i = 0; i < ratio.length; i++) { 
-      const ratioCents = cents(ratio[0], ratio[i]);
+  const currentRatio = ratios[ratioSlot];
+  if (currentRatio.length >= 2) {
+    for (let i = 0; i < currentRatio.length; i++) { 
+      const ratioCents = cents(currentRatio[0], currentRatio[i]);
       
       if (ratioCents >= 0) {
         stroke("#0DD");
         drawCentsMarker(ratioCents);
         noStroke();
         fill("#0DD");
-        drawTextForRatioMarker(ratio[i], ratio[0], ratioCents);
+        drawTextForRatioMarker(currentRatio[i], currentRatio[0], ratioCents);
 
         if (ratioCents <= 1200) {
           midOctaveRatioCents.push(ratioCents);
@@ -718,9 +718,13 @@ function drawEDOkeyboardRatioMarker(cents) {
   const xpos = map(cents, (-0.5)*stepCents, (edo+0.5)*stepCents, 20, width-20);
   const ypos = 230/2;
   const maxsize = min(80,((width-40) / (edo+1)) * 0.8);
-  const distanceToEdoEdgeDown = (cents % stepCents);
-  const distanceToEdoEdgeUp = stepCents - distanceToEdoEdgeDown;
-  let nearestDist = min(distanceToEdoEdgeDown,distanceToEdoEdgeUp);
+
+  const distances = [cents % stepCents,cents % stepCents - stepCents]; // to edges up, down
+  let nearestDist = distances[0];
+  if (Math.abs(distances[0]) > Math.abs(distances[1])) {
+    nearestDist = distances[1];
+  }
+
   let absDist = Math.abs(nearestDist)/(stepCents*0.5);
 
   fill("#00FFFF55");
