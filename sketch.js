@@ -81,6 +81,12 @@ function setup() {
   edoInput.value = edo;
   ratiosInput.value = ratios[ratioSlot].join(":");
   refInput.value = baseOscDown;
+
+  slotButtons.forEach((slotButton, index) => {
+    // button labels
+    const firstRatio = (ratios[index][0] !== undefined) ? ratios[index][0]+":" : "+";
+    slotButton.innerText = firstRatio;
+  });
   
   baseInput.addEventListener('input', (e) => {
     const inputValue = Number(e.target.value);
@@ -117,7 +123,7 @@ function setup() {
     }
   });
   
-  noLoop()
+  noLoop();
 }
 
 function windowResized() {
@@ -142,15 +148,22 @@ function ratioSlotButtonClicked(index) {
 }
 
 function ratioUpdated(el, input) {
-  // undo any unwanted symbols and set the updated 
-  const correctSymbolString = input.replace(new RegExp("[^0-9:]"), "");
-  el.value = correctSymbolString;
 
-  // only colons between digits! cap off first and last for further processing
-  const ratiosString = correctSymbolString.replace(new RegExp(":[^0-9]|[^0-9]:|^:|:$"), "");
+  if (input !== "") {
+    // undo any unwanted symbols and set the updated 
+    const correctSymbolString = input.replace(new RegExp("[^0-9:]"), "");
+    el.value = correctSymbolString;
 
-  // update array
-  ratios[ratioSlot] = ratiosString.split(":");
+    // only colons between digits! cap off first and last for further processing
+    const ratiosString = correctSymbolString.replace(new RegExp(":[^0-9]|[^0-9]:|^:|:$"), "");
+
+    // update array
+    ratios[ratioSlot] = ratiosString.split(":");
+
+    //also update the correct button
+    const firstRatio = (ratios[ratioSlot][0] !== "") ? ratios[ratioSlot][0]+":" : "+";
+    slotButtons[ratioSlot].innerText = firstRatio;
+  }
 }
 
 function waveformRadioClicked(el) {
@@ -308,6 +321,10 @@ function draw() {
     translate(0, -40);
     textAlign(CENTER);
 
+    midOctaveRatioCents.forEach((cent) => {
+      drawEDOkeyboardRatioMarker(cent)
+    });
+
     for (let i = 0; i < edo+1; i++) {
 
       // is this step currently playing?
@@ -319,29 +336,30 @@ function draw() {
       }
       if (playingStep) {
         stroke("#666");
-        fill("#333");
+        fill("#FFFFFF33");
       } else {
         stroke("#666");
         noFill();
       }
 
       // what ratios are closest?
-      let closest = undefined;
-      if (midOctaveRatioCents.length > 0) {
-        // only check halfway around the note with the first ratio, remove from array if found
-        // so the next edostep won't check it again
-        const distance = midOctaveRatioCents[0] - i * stepCents;
-        if (Math.abs(distance) < stepCents/2) {
-          closest = distance;
-          midOctaveRatioCents.shift()
-        } else if (distance < 0) {
-          midOctaveRatioCents.shift()
-        }
-      }
+      //let closest = undefined;
+      //if (midOctaveRatioCents.length > 0) {
+      //  // only check halfway around the note with the first ratio, remove from array if found
+      //  // so the next edostep won't check it again
+      //  const distance = midOctaveRatioCents[0] - i * stepCents;
+      //  if (Math.abs(distance) < stepCents/2) {
+      //    closest = distance;
+      //    midOctaveRatioCents.shift()
+      //  } else if (distance < 0) {
+      //    midOctaveRatioCents.shift()
+      //  }
+      //}
 
       // draw
-      drawEDOButton(i, closest);
+      drawEDOButton(i); //closest
     }
+
     textAlign(LEFT);
     translate(0, 40);
     fill("#BBB");
@@ -679,15 +697,34 @@ function drawEDOButton(i, closest) {
   fill("#BBB");
   noStroke();
   text(i, centerX, centerY-45);
-  if (closest !== undefined) {
-    const rangeDist = Math.abs(closest)/(stepCents*0.5);
-    fill(lerpColor(color("#00FFFFBB"), color("#00FFFF66"), rangeDist));
-    text(Math.round(closest) + "c", centerX, centerY+3);
-    fill(lerpColor(color("#00FFFF22"), color("#00FFFF22"), rangeDist));
-    const roomSize = min((230/2)/2, (rightEdge-leftEdge)/2)
-    const discSize = map(rangeDist,0,1,roomSize*1.5,0)
-    ellipse(map(closest/(stepCents*0.5),-1,1,leftEdge+discSize/2,rightEdge-discSize/2),centerY, discSize)
-  }
+  //if (closest !== undefined) {
+  //  const rangeDist = Math.abs(closest)/(stepCents*0.5);
+  //  fill(lerpColor(color("#00FFFFBB"), color("#00FFFF66"), rangeDist));
+  //  text(Math.round(closest) + "c", centerX, centerY+3);
+  //  fill(lerpColor(color("#00FFFF22"), color("#00FFFF22"), rangeDist));
+  //  const roomSize = min((230/2)/2, (rightEdge-leftEdge)/2)
+  //  const discSize = map(rangeDist,0,1,roomSize*1.5,0)
+  //  ellipse(map(closest/(stepCents*0.5),-1,1,leftEdge+discSize/2,rightEdge-discSize/2),centerY, discSize)
+  //}
+}
+
+function drawEDOkeyboardRatioMarker(cents) {
+  // if a ratio marker is exactly on the outside edges of the kbd, it is 0.5 edo steps too far
+  // so the full range is the amount of keys + 1
+  const xpos = map(cents, (-0.5)*stepCents, (edo+0.5)*stepCents, 20, width-20);
+  const ypos = 230/2;
+  const maxsize = min(80,((width-40) / (edo+1)) * 0.8);
+  const distanceToEdoEdgeDown = (cents % stepCents);
+  const distanceToEdoEdgeUp = stepCents - distanceToEdoEdgeDown;
+  let nearestDist = min(distanceToEdoEdgeDown,distanceToEdoEdgeUp);
+  let absDist = Math.abs(nearestDist)/(stepCents*0.5);
+
+  fill("#00FFFF55");
+  ellipse(xpos,ypos, maxsize*0.96);
+  fill(lerpColor(color("#00000088"), color("#000000BB"), absDist));
+  ellipse(xpos,ypos, maxsize);
+  fill(lerpColor(color("#00FFFFBB"), color("#00FFFF66"), absDist));
+  text(Math.round(nearestDist) + "c", xpos, ypos+3);
 }
 
 
