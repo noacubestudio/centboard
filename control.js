@@ -7,9 +7,9 @@ let touchPressed = 0;
 
 export const channels = [];
 // initialed with 10 channels, 
-// each contains an object with the osc 
+// each contains an object with the synth 
 // and source: [off, kbd, touch, mouse, ref]
-// sources that are off will be filled again first before starting a new osc,
+// sources that are off will be filled again first before starting a new synth,
 // skipping the first position reserved for the ref pitch
 
 window.mouseDragged = () => {
@@ -27,6 +27,7 @@ window.mouseDragged = () => {
 };
 
 window.mousePressed = () => {
+  userStartAudio();
   if (!isMouse) return
   if (outsideCanvas(mouseX, mouseY)) return;
   
@@ -36,9 +37,9 @@ window.mousePressed = () => {
   if (channel !== undefined) {
     setFromScreenXY(channel, mouseX, mouseY);
     channel.source = "mouse";
-    channel.osc.start();
+    channel.synth.start();
     channels[0].source = "ref";
-    channels[0].osc.start();
+    channels[0].synth.start();
 
     window.draw();
   }
@@ -52,10 +53,10 @@ window.mouseReleased = () => {
   if (channel !== undefined) {
     channel.source = "off";
     channel.sourceProperties = {};
-    channel.osc.stop();
+    channel.synth.stop();
     if (nothingOn()) {
       channels[0].source = "off";
-      channels[0].osc.stop();
+      channels[0].synth.stop();
     }
     
     window.draw();
@@ -67,6 +68,7 @@ export function handleMouseOver() {
 }
 
 export function handleTouchStart(event) {
+  userStartAudio();
   event.preventDefault();
   event.changedTouches.forEach((touch) => {
     const id = touch.identifier;
@@ -79,10 +81,10 @@ export function handleTouchStart(event) {
       setFromScreenXY(channel, x, y);
       channel.source = "touch";
       channel.sourceProperties.id = id;
-      channel.osc.start();
+      channel.synth.start();
       if (channels[0].source !== "ref") {
         channels[0].source = "ref";
-        channels[0].osc.start();
+        channels[0].synth.start();
       }
 
       window.draw();
@@ -116,10 +118,10 @@ export function handleTouchEnd(event) {
     if (channel !== undefined) {
       channel.source = "off";
       channel.sourceProperties = {};
-      channel.osc.stop();
+      channel.synth.stop();
       if (nothingOn()) {
         channels[0].source = "off";
-        channels[0].osc.stop();
+        channels[0].synth.stop();
       }
       
       window.draw();
@@ -131,6 +133,7 @@ window.keyPressed = () => {
 
   if (document.activeElement.type !== undefined) return
   if (!"1234567890".includes(key)) return
+  userStartAudio();
   kbdPressed++;
   
   const position = (key === "0") ? 10 : Number(key);
@@ -139,10 +142,10 @@ window.keyPressed = () => {
   if (channel !== undefined) {
     setFromKbd(channel, position);
     channel.source = "kbd";
-    channel.osc.start();
+    channel.synth.start();
     if (channels[0].source !== "ref") {
       channels[0].source = "ref";
-      channels[0].osc.start();
+      channels[0].synth.start();
     }
 
     window.draw();
@@ -160,10 +163,10 @@ window.keyReleased = () => {
   if (channel !== undefined) {
     channel.source = "off";
     channel.sourceProperties = {};
-    channel.osc.stop();
+    channel.synth.stop();
     if (nothingOn()) {
       channels[0].source = "off";
-      channels[0].osc.stop();
+      channels[0].synth.stop();
     }
 
     window.draw();
@@ -221,7 +224,7 @@ function setFromScreenXY(channel, x, y) {
     const channelCents = screenXtoCents(x);
     channel.sourceProperties.cents = channelCents;
     // set freq
-    channel.osc.freq(frequency(baseFreq, channelCents));
+    channel.synth.freq(frequency(baseFreq, channelCents));
     
   } else if (canvasSegment(y) === "keyboard") { // ratio keyboard
     if (ratios[ratioSlot].length > 1) {
@@ -230,7 +233,7 @@ function setFromScreenXY(channel, x, y) {
       const channelCents = cents(ratios[ratioSlot][0], ratios[ratioSlot][channelRatiostep]);
       channel.sourceProperties.cents = channelCents;
       // set freq
-      channel.osc.freq(frequency(baseFreq, channelCents));
+      channel.synth.freq(frequency(baseFreq, channelCents));
     }
     
   } else {
@@ -240,7 +243,7 @@ function setFromScreenXY(channel, x, y) {
       const channelCents = (channelEDOStep/edo)*1200;
       channel.sourceProperties.cents = channelCents;
       // set freq
-      channel.osc.freq(frequency(baseFreq, channelCents));
+      channel.synth.freq(frequency(baseFreq, channelCents));
     }
   }
 }
@@ -265,6 +268,6 @@ function setFromKbd(channel, position) {
     const channelCents = (channelEDOStep/edo)*1200;
     channel.sourceProperties.cents = channelCents;
     // set freq
-    channel.osc.freq(frequency(baseFreq, channelCents));
+    channel.synth.freq(frequency(baseFreq, channelCents));
   }
 }

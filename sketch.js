@@ -19,7 +19,7 @@ const slotButtons = [
 let lpFilter;
 let waveform = "sawtooth";
 export let baseFreq = 220;
-let baseOscDown = 1200;
+let refCentsLower = 1200;
 
 // scale settings
 
@@ -47,28 +47,28 @@ window.setup = () => {
   for (let i = 0; i < 10; i++) {
     
     let source = "off";
-    let osc = new p5.Oscillator();
+    let synth = new p5.Oscillator();
     let sourceProperties = {};
     
-    osc.disconnect();
-    osc.connect(lpFilter);
-    osc.setType(waveform);
-    osc.freq(baseFreq)
-    osc.amp(0.5);
+    synth.disconnect();
+    synth.connect(lpFilter);
+    synth.setType(waveform);
+    synth.freq(baseFreq)
+    synth.amp(0.5);
     
     if (i === 0) {
-      osc.freq(frequency(baseFreq, -baseOscDown));
+      synth.freq(frequency(baseFreq, -refCentsLower));
       sourceProperties = {
-        cents: -baseOscDown, ratiostep: -1, edostep: -1
+        cents: -refCentsLower, ratiostep: -1, edostep: -1
       }
     }
-    channels.push({osc: osc, source: source, sourceProperties: sourceProperties});
+    channels.push({synth: synth, source: source, sourceProperties: sourceProperties});
   }
 
   baseInput.value = baseFreq;
   edoInput.value = edo;
   ratiosInput.value = ratios[ratioSlot].join(":");
-  refInput.value = baseOscDown;
+  refInput.value = refCentsLower;
 
   slotButtons.forEach((slotButton, index) => {
     // button labels
@@ -81,7 +81,7 @@ window.setup = () => {
     if (!isNaN(inputValue) && inputValue > 0) {
       baseFreq = inputValue;
       const refChannel = channels[0];
-      refChannel.osc.freq(frequency(baseFreq, -baseOscDown));
+      refChannel.synth.freq(frequency(baseFreq, -refCentsLower));
       draw();
     }
   });
@@ -103,10 +103,10 @@ window.setup = () => {
   refInput.addEventListener('input', (e) => {
     const inputValue = Number(e.target.value);
     if (!isNaN(inputValue) && inputValue >= 0) {
-      baseOscDown = inputValue;
+      refCentsLower = inputValue;
       const refChannel = channels[0];
-      refChannel.osc.freq(frequency(baseFreq, -baseOscDown));
-      refChannel.sourceProperties.cents = -baseOscDown;
+      refChannel.synth.freq(frequency(baseFreq, -refCentsLower));
+      refChannel.sourceProperties.cents = -refCentsLower;
       draw();
     }
   });
@@ -159,7 +159,7 @@ function ratioUpdated(el, input, oldslot) {
 document.waveformRadioClicked = (el) => {
   waveform = el.value;
   for (let i = 0; i < channels.length; i++) {
-    channels[i].osc.setType(waveform);
+    channels[i].synth.setType(waveform);
   }
 }
 
