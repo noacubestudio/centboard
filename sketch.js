@@ -1,3 +1,5 @@
+import {handleTouchStart, handleTouchMove, handleTouchEnd, handleMouseOver, channels} from "./control.js"
+
 // html elements
 
 let cnv;
@@ -12,44 +14,30 @@ const slotButtons = [
   document.getElementById("slotButton3")
 ];
 
-// input
-
-let isMouse = false;
-let mouseDown = false;
-let kbdPressed = 0;
-let touchPressed = 0;
-
-const channels = [];
-// initialed with 10 channels, 
-// each contains an object with the osc 
-// and source: [off, kbd, touch, mouse, ref]
-// sources that are off will be filled again first before starting a new osc,
-// skipping the first position reserved for the ref pitch
-
 // sound settings
 
 let lpFilter;
 let waveform = "sawtooth";
-let baseFreq = 220;
+export let baseFreq = 220;
 let baseOscDown = 1200;
 
 // scale settings
 
-let centsDown = 1400;
-let centsUp = 2000;
-let edo = 12;
+export let centsDown = 1400;
+export let centsUp = 2000;
+export let edo = 12;
 let stepCents = 1200/edo;
 
-let ratioSlot = 0;
-let ratios = [[24,27,30,32,36,40,45,48],[4,5,6,7,8],[]];
+export let ratioSlot = 0;
+export let ratios = [[24,27,30,32,36,40,45,48],[4,5,6,7,8],[]];
 
 
-function setup() {
+window.setup = () => {
   cnv = createCanvas(windowWidth-20, 600).parent(container);
   cnv.touchStarted(handleTouchStart);
   cnv.touchMoved(handleTouchMove);
   cnv.touchEnded(handleTouchEnd);
-  cnv.mouseOver(() => {isMouse = true;});
+  cnv.mouseOver(handleMouseOver);
   textFont('monospace');
   rectMode(CORNERS);
 
@@ -126,14 +114,15 @@ function setup() {
   noLoop();
 }
 
-function windowResized() {
+window.windowResized = () => {
   resizeCanvas(windowWidth-20, 600);
 }
 
-function ratioSlotButtonClicked(index) {
+document.ratioSlotButtonClicked = (index) => {
   // update slot
+  const oldRatioSlot = ratioSlot;
   ratioSlot = index;
-  ratioUpdated(ratiosInput, ratios[ratioSlot].join(":"));
+  ratioUpdated(ratiosInput, ratios[ratioSlot].join(":"), oldRatioSlot);
 
   // update styling of the buttons to show new selected and change the text
   slotButtons.forEach((slot, sIndex) => {
@@ -147,38 +136,34 @@ function ratioSlotButtonClicked(index) {
   draw();
 }
 
-function ratioUpdated(el, input) {
+function ratioUpdated(el, input, oldslot) {
 
-  if (input !== "") {
-    // undo any unwanted symbols and set the updated 
-    const correctSymbolString = input.replace(new RegExp("[^0-9:]"), "");
-    el.value = correctSymbolString;
+  if (oldslot !== undefined && input === "") input = ratios[oldslot].join(":") //just use existing last one that wasn't empty?
+  if (input === "") return;
 
-    // only colons between digits! cap off first and last for further processing
-    const ratiosString = correctSymbolString.replace(new RegExp(":[^0-9]|[^0-9]:|^:|:$"), "");
+  // undo any unwanted symbols and set the updated 
+  const correctSymbolString = input.replace(new RegExp("[^0-9:]"), "");
+  el.value = correctSymbolString;
 
-    // update array
-    ratios[ratioSlot] = ratiosString.split(":");
+  // only colons between digits! cap off first and last for further processing
+  const ratiosString = correctSymbolString.replace(new RegExp(":[^0-9]|[^0-9]:|^:|:$"), "");
 
-    //also update the correct button
-    const firstRatio = (ratios[ratioSlot][0] !== "") ? ratios[ratioSlot][0]+":" : "+";
-    slotButtons[ratioSlot].innerText = firstRatio;
-  }
+  // update array
+  ratios[ratioSlot] = ratiosString.split(":");
+
+  //also update the correct button
+  const firstRatio = (ratios[ratioSlot][0] !== "") ? ratios[ratioSlot][0]+":" : "+";
+  slotButtons[ratioSlot].innerText = firstRatio;
 }
 
-function waveformRadioClicked(el) {
+document.waveformRadioClicked = (el) => {
   waveform = el.value;
   for (let i = 0; i < channels.length; i++) {
     channels[i].osc.setType(waveform);
   }
 }
-function playDown() {
-  print("play!")
-}
-function playUp() {
-  print("end!")
-}
-function stepperButtonClicked(offset) {
+
+document.stepperButtonClicked = (offset) => {
   edo += offset;
   edo = max(edo, 2);
   stepCents = 1200/edo;
@@ -216,8 +201,7 @@ function updatePlayed() {
   });
 }
 
-
-function draw() {
+window.draw = () => {
   background("black");
   textAlign(LEFT);
   textSize(10);
@@ -377,249 +361,6 @@ function draw() {
 }
 
 
-
-
-function firstChannel(source) {
-  for (let i = 1; i < channels.length; i++) {
-    if (channels[i].source === source) {
-      return i;
-    }
-  }
-}
-function exactChannel(source, id) {
-  if (source === "kbd") {
-    for (let i = 1; i < channels.length; i++) {
-      const channel = channels[i];
-      if (channel.source === source && channel.sourceProperties.edostep === id -1) {
-        return i;
-      }
-    }
-  } else if (source === "touch") {
-    for (let i = 1; i < channels.length; i++) {
-      const channel = channels[i];
-      if (channel.source === source && channel.sourceProperties.id === id) {
-        return i;
-      }
-    }
-  }
-}
-
-
-function mouseDragged() {
-  if (!isMouse) return
-  if (outsideCanvas(mouseX, mouseY)) return;
-  
-  const channel = channels[firstChannel("mouse")];
-  if (channel !== undefined) {
-    setFromScreenXY(channel, mouseX, mouseY);
-  
-    draw();
-  }
-}
-
-function mousePressed() {
-  if (!isMouse) return
-  if (outsideCanvas(mouseX, mouseY)) return;
-  
-  mouseDown = true;
-  
-  const channel = channels[firstChannel("off")];
-  if (channel !== undefined) {
-    setFromScreenXY(channel, mouseX, mouseY);
-    channel.source = "mouse";
-    channel.osc.start();
-    channels[0].source = "ref";
-    channels[0].osc.start();
-
-    draw();
-  }
-}
-
-function mouseReleased() {
-  if (!isMouse) return
-  mouseDown = false;
-  
-  const channel = channels[firstChannel("mouse")];
-  if (channel !== undefined) {
-    channel.source = "off";
-    channel.sourceProperties = {};
-    channel.osc.stop();
-    if (nothingOn()) {
-      channels[0].source = "off";
-      channels[0].osc.stop();
-    }
-    
-    draw();
-  }
-}
-
-function handleTouchStart(event) {
-  event.preventDefault();
-  event.changedTouches.forEach((touch) => {
-    const id = touch.identifier;
-    const x = touch.clientX; const y = touch.clientY - 60;
-    if (outsideCanvas(x, y)) return;
-    
-    touchPressed++;
-    const channel = channels[firstChannel("off")];
-    if (channel !== undefined) {
-      setFromScreenXY(channel, x, y);
-      channel.source = "touch";
-      channel.sourceProperties.id = id;
-      channel.osc.start();
-      if (channels[0].source !== "ref") {
-        channels[0].source = "ref";
-        channels[0].osc.start();
-      }
-
-      draw();
-    }
-    //print(touch)
-  })
-}
-
-function handleTouchMove(event) {
-  event.changedTouches.forEach((touch) => {
-    const id = touch.identifier;
-    const x = touch.clientX; const y = touch.clientY - 60;
-    if (outsideCanvas(x, y)) return;
-    
-    const channel = channels[exactChannel("touch", id)];
-    if (channel !== undefined) {
-      setFromScreenXY(channel, x, y);
-  
-      draw();
-    }
-  })
-}
-
-function handleTouchEnd(event) {
-  event.changedTouches.forEach((touch) => {
-    const id = touch.identifier;
-    //const x = touch.clientX; const y = touch.clientY - 60;
-    
-    touchPressed--;
-    const channel = channels[exactChannel("touch", id)];
-    if (channel !== undefined) {
-      channel.source = "off";
-      channel.sourceProperties = {};
-      channel.osc.stop();
-      if (nothingOn()) {
-        channels[0].source = "off";
-        channels[0].osc.stop();
-      }
-      
-      draw();
-    }
-  })
-}
-
-
-function keyPressed() {
-  
-  if (document.activeElement.type !== undefined) return
-  if (!"1234567890".includes(key)) return
-  kbdPressed++;
-  
-  const position = (key === "0") ? 10 : Number(key);
-
-  const channel = channels[firstChannel("off")];
-  if (channel !== undefined) {
-    setFromKbd(channel, position);
-    channel.source = "kbd";
-    channel.osc.start();
-    if (channels[0].source !== "ref") {
-      channels[0].source = "ref";
-      channels[0].osc.start();
-    }
-
-    draw();
-  }
-}
-function keyReleased() {
-  
-  if (document.activeElement.type !== undefined) return
-  if (!"1234567890".includes(key)) return
-  kbdPressed--;
-  const position = (key === "0") ? 10 : Number(key);
-
-  const channel = channels[exactChannel("kbd", position)];
-  if (channel !== undefined) {
-    channel.source = "off";
-    channel.sourceProperties = {};
-    channel.osc.stop();
-    if (nothingOn()) {
-      channels[0].source = "off";
-      channels[0].osc.stop();
-    }
-
-    draw();
-  }
-  return false; // prevent any default behavior
-}
-
-function nothingOn() {
-  return (!mouseDown && kbdPressed === 0 && touchPressed === 0)
-}
-
-function setFromScreenXY(channel, x, y) {
-  
-  channel.sourceProperties.ratiostep = undefined;
-  channel.sourceProperties.edostep = undefined;
-  
-  if (canvasSegment(y) === "slider") {
-    const channelCents = screenXtoCents(x);
-    channel.sourceProperties.cents = channelCents;
-    // set freq
-    channel.osc.freq(frequency(baseFreq, channelCents));
-    
-  } else if (canvasSegment(y) === "keyboard") { // ratio keyboard
-    if (ratios[ratioSlot].length > 1) {
-      const channelRatiostep = screenXtoRatio(x);
-      channel.sourceProperties.ratiostep = channelRatiostep;
-      const channelCents = cents(ratios[ratioSlot][0], ratios[ratioSlot][channelRatiostep]);
-      channel.sourceProperties.cents = channelCents;
-      // set freq
-      channel.osc.freq(frequency(baseFreq, channelCents));
-    }
-    
-  } else {
-    if (edo > 1) { // edo keyboard
-      const channelEDOStep = screenXtoEdo(x);
-      channel.sourceProperties.edostep = channelEDOStep;
-      const channelCents = (channelEDOStep/edo)*1200;
-      channel.sourceProperties.cents = channelCents;
-      // set freq
-      channel.osc.freq(frequency(baseFreq, channelCents));
-    }
-  }
-}
-
-function setFromKbd(channel, position) {
-  if (edo > 1) {
-    const channelEDOStep = position - 1;
-    channel.sourceProperties.edostep = channelEDOStep;
-    const channelCents = (channelEDOStep/edo)*1200;
-    channel.sourceProperties.cents = channelCents;
-    // set freq
-    channel.osc.freq(frequency(baseFreq, channelCents));
-  }
-}
-
-
-function outsideCanvas(x, y) {
-  if (x < 0) return true
-  if (x > width) return true
-  if (y < 0) return true
-  if (y > height) return true
-}
-
-function canvasSegment(y) {
-  if (y <= 200) return "slider"
-  if (y <= 400) return "keyboard"
-  return "edo"
-}
-
 function drawCentsMarker(cents, octave) {
   const xPos = map(cents, -centsDown, centsUp, 0, width);
   const gap = 50;
@@ -736,28 +477,15 @@ function drawEDOkeyboardRatioMarker(cents) {
 }
 
 
-function screenXtoCents(x) {
-  return map(x, 0, width, -centsDown, centsUp)
-}
-
-function screenXtoRatio(x) {
-  const notes = ratios[ratioSlot];
-  return Math.floor(map(x, 20, width-20, 0, notes.length))
-}
-
-function screenXtoEdo(x) {
-  return Math.floor(map(x, 20, width-20, 0, edo+1))
-}
-
 // distance between two frequencies in cents
-function cents(a, b) {
+export function cents(a, b) {
   if (b === a) return 0;
   //if (b % a === 0) return 1200;
   return 1200 * Math.log2(b / a); //% 1200;
 }
 
 // frequency after going certain distance in cents
-function frequency(base, cents) {
+export function frequency(base, cents) {
   return base * Math.pow(2, cents / 1200);
 }
 
