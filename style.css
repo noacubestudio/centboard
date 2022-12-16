@@ -1,7 +1,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background-color: #050505;
+  background-color: #070610;
   font-family: monospace;
   font-size: 15px;
 }
@@ -52,7 +52,7 @@ input[type="text"] {
 }
 
 label {
-  color: white;
+  color: #EEF;
   margin-left: 20px;
   margin-top: 16px;
   display: flex;
@@ -70,7 +70,7 @@ label {
 
 span {
   margin-inline: 4px;
-  color: #ddd;
+  color: #BAF;
 }
 .rowlabel {
   width: 8em;
