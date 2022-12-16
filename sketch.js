@@ -42,7 +42,7 @@ window.setup = () => {
   rectMode(CORNERS);
 
   lpFilter = new p5.LowPass();
-  
+
   // initialize all channels
   for (let i = 0; i < 10; i++) {
     
@@ -208,7 +208,7 @@ window.draw = () => {
   
   updatePlayed();
   
-  stroke("#666");
+  stroke("#BBAAFF80");
 
   for(let i = stepCents; i < centsDown; i += stepCents) {
     drawCentsMarker(-i);
@@ -219,16 +219,16 @@ window.draw = () => {
     const scaleStep = Math.round(i/stepCents);
     if (scaleStep <= edo) {
       noStroke();
-      fill("#333");
-      text(scaleStep, map(i, -centsDown, centsUp, 0, width)+5, 58);
-      stroke("#666");
+      fill("#BBAAFFA0");
+      text(scaleStep, map(i, -centsDown, centsUp, 0, width)+6, 62);
+      stroke("#BBAAFF80");
     }
   }
 
   textAlign(CENTER);
   textSize(12);
-  stroke("#DDD");
-  fill("#DDD");
+  stroke("#BAF");
+  fill("#BAF");
   drawCentsMarker(0, true);
   drawCentsMarker(1200, true);
   drawCentsMarker(-1200, true);
@@ -243,9 +243,9 @@ window.draw = () => {
       
       if (ratioCents >= 0) {
         stroke("#0DD");
-        drawCentsMarker(ratioCents);
-        noStroke();
         fill("#0DD");
+        drawCentsMarker(ratioCents, (ratioCents % 1200 === 0));
+        noStroke();
         drawTextForRatioMarker(currentRatio[i], currentRatio[0], ratioCents);
 
         if (ratioCents <= 1200) {
@@ -260,9 +260,9 @@ window.draw = () => {
   // draw played cents
   playedCents.forEach((c) => {
     stroke("orange");
+    fill("orange");
     drawCentsMarker(c);
     noStroke();
-    fill("orange");
     text(Math.round(c) + " c", map(c, -centsDown, centsUp, 0, width), 20);
     const f = frequency(baseFreq, c);
     text(Math.round(f*10)/10 + " Hz", map(c, -centsDown, centsUp, 0, width), 40);
@@ -271,10 +271,13 @@ window.draw = () => {
   textAlign(LEFT);
   noStroke();
 
+
+
   // lower part
   push();
   translate(0, 200);
   fill("#0DD");
+  strokeWeight(2);
 
   if (ratios[ratioSlot].length > 1) {
     
@@ -289,12 +292,11 @@ window.draw = () => {
           playingRatio = true; break;
         }
       }
+      stroke("#000");
       if (playingRatio) {
-        stroke("#0AA");
-        fill("#022");
+        fill("#00FFFF20");
       } else {
-        stroke("#0AA");
-        noFill();
+        fill("#00FFFF30");
       }
       drawRatioButton(i);
     }
@@ -307,11 +309,6 @@ window.draw = () => {
   translate(0, 200);
   if (edo > 1) {
     translate(0, -40);
-    textAlign(CENTER);
-
-    midOctaveRatioCents.forEach((cent) => {
-      drawEDOkeyboardRatioMarker(cent)
-    });
 
     for (let i = 0; i < edo+1; i++) {
 
@@ -322,12 +319,11 @@ window.draw = () => {
           playingStep = true; break;
         }
       }
+      stroke("#000");
       if (playingStep) {
-        stroke("#666");
-        fill("#FFFFFF33");
+        fill("#BBAAFF20");
       } else {
-        stroke("#666");
-        noFill();
+        fill("#BBAAFF30");
       }
 
       // what ratios are closest?
@@ -348,9 +344,15 @@ window.draw = () => {
       drawEDOButton(i); //closest
     }
 
+    textAlign(CENTER);
+
+    midOctaveRatioCents.forEach((cent) => {
+      drawEDOkeyboardRatioMarker(cent)
+    });
+
     textAlign(LEFT);
     translate(0, 40);
-    fill("#BBB");
+    fill("#BBAAFF");
     text(edo + " EDO Keyboard (Octave above "+baseFreq+" Hz, step size "+Number(stepCents.toFixed(2))+")", 20, 200-30);
   }
   pop();
@@ -361,16 +363,21 @@ window.draw = () => {
 }
 
 
-function drawCentsMarker(cents, octave) {
+function drawCentsMarker(cents) {
   const xPos = map(cents, -centsDown, centsUp, 0, width);
   const gap = 50;
   const yTop = gap;
   const yBot = 200 - gap;
-  line(xPos, yTop, xPos, yBot);
-  if (octave !== undefined) {
+  if (cents % 1200 === 0) {
     ellipse(xPos, yTop, 6);
     ellipse(xPos, yBot, 6);
+    strokeWeight(1.5);
+    line(xPos, yTop, xPos, yBot);
+    strokeWeight(1);
+  } else {
+    line(xPos, yTop, xPos, yBot);
   }
+  
 }
 
 function drawTextForRatioMarker (a, b, ratioCents) {
@@ -411,7 +418,7 @@ function drawRatioButton(i) {
   const centerX = 0.5 * (leftEdge + rightEdge);
   const centerY = 230/2;
 
-  rect(leftEdge, 50, rightEdge, 200-20);
+  rect(leftEdge, 50, rightEdge, 200-20, 14, 14, 24, 24);
   noStroke();
 
   const a = Number(notes[i]);
@@ -438,8 +445,8 @@ function drawEDOButton(i, closest) {
   const centerX = 0.5 * (leftEdge + rightEdge);
   const centerY = 230/2;
 
-  rect(leftEdge, 50, rightEdge, 200-20);
-  fill("#BBB");
+  rect(leftEdge, 50, rightEdge, 200-20, 14, 14, 24, 24);
+  fill("#BBAAFF");
   noStroke();
   text(i, centerX, centerY-45);
   //if (closest !== undefined) {
@@ -468,11 +475,9 @@ function drawEDOkeyboardRatioMarker(cents) {
 
   let absDist = Math.abs(nearestDist)/(stepCents*0.5);
 
-  fill("#00FFFF55");
-  ellipse(xpos,ypos, maxsize*0.96);
-  fill(lerpColor(color("#00000088"), color("#000000BB"), absDist));
+  fill(lerpColor(color("#00FFFF20"), color("#00FFFF10"), absDist));
   ellipse(xpos,ypos, maxsize);
-  fill(lerpColor(color("#00FFFFBB"), color("#00FFFF66"), absDist));
+  fill(lerpColor(color("#00FFFFD0"), color("#00FFFF90"), absDist));
   text(Math.round(nearestDist) + "c", xpos, ypos+3);
 }
 

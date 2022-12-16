@@ -34,9 +34,9 @@ canvas {
 input {
   padding: 4px;
   color: white;
-  background-color: black;
+  background-color: #BBAAFF20;
   border-radius: 4px;
-  border: 1px #446 solid;
+  border: 1px #BBAAFF80 solid;
 }
 
 input:focus {
@@ -88,7 +88,7 @@ span {
 
 button {
   color: white;
-  background-color: #446;
+  background-color: #BBAAFF50;
   border: none;
   border-radius: 4px;
   padding: 5px 12px;
@@ -96,13 +96,13 @@ button {
 }
 
 .buttonSelected {
-  background-color: rgb(70, 70, 211);
+  background-color: #00FFFF60;
 }
 
 button:not(.buttonSelected):hover {
-  background-color: #668;
+  background-color: #BBAAFF80;
 }
 
 button:not(.buttonSelected):active {
-  background-color: #222;
+  background-color: #BBAAFF20;
 }
