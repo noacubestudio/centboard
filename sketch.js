@@ -35,13 +35,13 @@ export let ratios = [[24,27,30,32,36,40,45,48],[4,5,6,7,8],[]];
 const palette = {
   bg: "#000005",
   default: "#6040FF",
-  ratiosbase: "#BB22FF",
-  rations1200: "#FFBBBB",
-  play: "#CCFFFF"
+  ratiosbase: "#FFBB44",
+  rations1200: "#22FFFF",
+  play: "#FFCCFF"
 }
 
 function paletteRatios(step, hexopacity) {
-  return chroma.mix(palette.ratiosbase, palette.rations1200, step, 'hsl').hex() + hexopacity;
+  return chroma.mix(palette.ratiosbase, palette.rations1200, step, 'oklch').hex() + hexopacity;
   //return lerpColor(
   //  color(palette.ratiosbase + hexopacity), 
   //  color(palette.rations1200 + hexopacity), 
