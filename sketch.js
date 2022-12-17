@@ -33,18 +33,20 @@ export let ratios = [[24,27,30,32,36,40,45,48],[4,5,6,7,8],[]];
 
 // visual
 const palette = {
-  default: "#BBAAFF",
-  ratiosbase: "#EE22FF",
-  rations1200: "#FF8866",
-  play: "#66FFFF"
+  bg: "#000005",
+  default: "#6040FF",
+  ratiosbase: "#BB22FF",
+  rations1200: "#FFBBBB",
+  play: "#CCFFFF"
 }
 
 function paletteRatios(step, hexopacity) {
-  return lerpColor(
-    color(palette.ratiosbase + hexopacity), 
-    color(palette.rations1200 + hexopacity), 
-    step
-  );
+  return chroma.mix(palette.ratiosbase, palette.rations1200, step, 'hsl').hex() + hexopacity;
+  //return lerpColor(
+  //  color(palette.ratiosbase + hexopacity), 
+  //  color(palette.rations1200 + hexopacity), 
+  //  step
+  //);
 }
 
 
@@ -218,7 +220,7 @@ function updatePlayed() {
 }
 
 window.draw = () => {
-  background("black");
+  background(palette.bg);
   textAlign(LEFT);
   textSize(10);
   
@@ -258,7 +260,7 @@ window.draw = () => {
       const ratioCents = cents(currentRatio[0], currentRatio[i]);
       
       if (ratioCents >= 0) {
-        const ratioColor = paletteRatios(map(ratioCents, 0, 1200, 0, 1), "DD");
+        const ratioColor = paletteRatios(map(ratioCents, 0, 1200, 0, 1), "FF");
         stroke(ratioColor);
         fill(ratioColor);
         drawCentsMarker(ratioCents, (ratioCents % 1200 === 0));
@@ -309,7 +311,7 @@ window.draw = () => {
           playingRatio = true; break;
         }
       }
-      stroke("black");
+      stroke(palette.bg);
       const ratioCents = cents(currentRatio[0], currentRatio[i]);
       drawRatioButton(i, ratioCents, playingRatio);
     }
@@ -332,11 +334,11 @@ window.draw = () => {
           playingStep = true; break;
         }
       }
-      stroke("black");
+      stroke(palette.bg);
       if (playingStep) {
-        fill(palette.default + "20");
-      } else {
         fill(palette.default + "30");
+      } else {
+        fill(palette.default + "40");
       }
 
       // what ratios are closest?
@@ -431,9 +433,9 @@ function drawRatioButton(i, cents, playing) {
   const centerX = 0.5 * (leftEdge + rightEdge);
   const centerY = 230/2;
 
-  let fillColor = paletteRatios(map(cents, 0, 1200, 0, 1), "30");
+  let fillColor = paletteRatios(map(cents, 0, 1200, 0, 1), "40");
   if (playing) {
-    fillColor = paletteRatios(map(cents, 0, 1200, 0, 1), "20");
+    fillColor = paletteRatios(map(cents, 0, 1200, 0, 1), "30");
   } 
   fill(fillColor);
   rect(leftEdge, 50, rightEdge, 200-20, 14, 14, 24, 24);
@@ -442,7 +444,7 @@ function drawRatioButton(i, cents, playing) {
   const a = Number(notes[i]);
   const b = Number(notes[0]);
 
-  fill(paletteRatios(map(cents, 0, 1200, 0, 1), "DD"));
+  fill(paletteRatios(map(cents, 0, 1200, 0, 1), "FF"));
   text([a,b].join("/"), centerX, centerY-45);
 
   // simplify with fallback: undefined
@@ -453,7 +455,7 @@ function drawRatioButton(i, cents, playing) {
 
   const simplifiedString = "(" + simplified.join("/") + ")";
 
-  fill(paletteRatios(map(cents, 0, 1200, 0, 1), "AA"));
+  fill(paletteRatios(map(cents, 0, 1200, 0, 1), "CC"));
   text(simplifiedString, centerX,centerY-30);
 }
 
@@ -490,8 +492,8 @@ function drawEDOkeyboardRatioMarker(cents) {
     ));
   ellipse(xpos,ypos, maxsize);
   fill(lerpColor(
-    color(paletteRatios(map(cents, 0, 1200, 0, 1), "D0")), 
-    color(paletteRatios(map(cents, 0, 1200, 0, 1), "90")), absDist
+    color(paletteRatios(map(cents, 0, 1200, 0, 1), "E0")), 
+    color(paletteRatios(map(cents, 0, 1200, 0, 1), "A0")), absDist
     ));
   text(Math.round(nearestDist) + "c", xpos, ypos+3);
 }
