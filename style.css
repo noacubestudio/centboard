@@ -1,7 +1,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background-color: #070610;
+  background-color: #0a090f;
   font-family: monospace;
   font-size: 15px;
 }
@@ -96,7 +96,7 @@ button {
 }
 
 .buttonSelected {
-  background-color: #00FFFF60;
+  background-color: #9c48ccaf;
 }
 
 button:not(.buttonSelected):hover {

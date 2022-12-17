@@ -34,8 +34,17 @@ export let ratios = [[24,27,30,32,36,40,45,48],[4,5,6,7,8],[]];
 // visual
 const palette = {
   default: "#BBAAFF",
-  ratiosbase: "#00FFFF",
-  play: "#FFFF00"
+  ratiosbase: "#EE22FF",
+  rations1200: "#FF8866",
+  play: "#66FFFF"
+}
+
+function paletteRatios(step, hexopacity) {
+  return lerpColor(
+    color(palette.ratiosbase + hexopacity), 
+    color(palette.rations1200 + hexopacity), 
+    step
+  );
 }
 
 
@@ -249,8 +258,9 @@ window.draw = () => {
       const ratioCents = cents(currentRatio[0], currentRatio[i]);
       
       if (ratioCents >= 0) {
-        stroke(palette.ratiosbase + "DD");
-        fill(palette.ratiosbase + "DD");
+        const ratioColor = paletteRatios(map(ratioCents, 0, 1200, 0, 1), "DD");
+        stroke(ratioColor);
+        fill(ratioColor);
         drawCentsMarker(ratioCents, (ratioCents % 1200 === 0));
         noStroke();
         drawTextForRatioMarker(currentRatio[i], currentRatio[0], ratioCents);
@@ -300,12 +310,8 @@ window.draw = () => {
         }
       }
       stroke("black");
-      if (playingRatio) {
-        fill(palette.ratiosbase + "20");
-      } else {
-        fill(palette.ratiosbase + "30");
-      }
-      drawRatioButton(i);
+      const ratioCents = cents(currentRatio[0], currentRatio[i]);
+      drawRatioButton(i, ratioCents, playingRatio);
     }
   } else {
     // fallback graphic
@@ -418,20 +424,25 @@ function simplifiedRatio(a, b, fallback) {
   return (a !== sa) ? [sa, sb] : fallback;
 }
 
-function drawRatioButton(i) {
+function drawRatioButton(i, cents, playing) {
   const notes = ratios[ratioSlot];
   const leftEdge = map(i, 0, notes.length, 20, width-20);
   const rightEdge = map(i+1, 0, notes.length, 20, width-20);
   const centerX = 0.5 * (leftEdge + rightEdge);
   const centerY = 230/2;
 
+  let fillColor = paletteRatios(map(cents, 0, 1200, 0, 1), "30");
+  if (playing) {
+    fillColor = paletteRatios(map(cents, 0, 1200, 0, 1), "20");
+  } 
+  fill(fillColor);
   rect(leftEdge, 50, rightEdge, 200-20, 14, 14, 24, 24);
   noStroke();
 
   const a = Number(notes[i]);
   const b = Number(notes[0]);
 
-  fill(palette.ratiosbase + "DD");
+  fill(paletteRatios(map(cents, 0, 1200, 0, 1), "DD"));
   text([a,b].join("/"), centerX, centerY-45);
 
   // simplify with fallback: undefined
@@ -442,11 +453,11 @@ function drawRatioButton(i) {
 
   const simplifiedString = "(" + simplified.join("/") + ")";
 
-  fill(palette.ratiosbase + "AA");
+  fill(paletteRatios(map(cents, 0, 1200, 0, 1), "AA"));
   text(simplifiedString, centerX,centerY-30);
 }
 
-function drawEDOButton(i, closest) {
+function drawEDOButton(i) {
   const leftEdge = map(i, 0, edo+1, 20, width-20);
   const rightEdge = map(i+1, 0, edo+1, 20, width-20);
   const centerX = 0.5 * (leftEdge + rightEdge);
@@ -456,15 +467,6 @@ function drawEDOButton(i, closest) {
   fill(palette.default);
   noStroke();
   text(i, centerX, centerY-45);
-  //if (closest !== undefined) {
-  //  const rangeDist = Math.abs(closest)/(stepCents*0.5);
-  //  fill(lerpColor(color("#00FFFFBB"), color("#00FFFF66"), rangeDist));
-  //  text(Math.round(closest) + "c", centerX, centerY+3);
-  //  fill(lerpColor(color("#00FFFF22"), color("#00FFFF22"), rangeDist));
-  //  const roomSize = min((230/2)/2, (rightEdge-leftEdge)/2)
-  //  const discSize = map(rangeDist,0,1,roomSize*1.5,0)
-  //  ellipse(map(closest/(stepCents*0.5),-1,1,leftEdge+discSize/2,rightEdge-discSize/2),centerY, discSize)
-  //}
 }
 
 function drawEDOkeyboardRatioMarker(cents) {
@@ -483,13 +485,13 @@ function drawEDOkeyboardRatioMarker(cents) {
   let absDist = Math.abs(nearestDist)/(stepCents*0.5);
 
   fill(lerpColor(
-    color(palette.ratiosbase + "20"), 
-    color(palette.ratiosbase + "10"), absDist
+    color(paletteRatios(map(cents, 0, 1200, 0, 1), "20")), 
+    color(paletteRatios(map(cents, 0, 1200, 0, 1), "10")), absDist
     ));
   ellipse(xpos,ypos, maxsize);
   fill(lerpColor(
-    color(palette.ratiosbase + "D0"), 
-    color(palette.ratiosbase + "90"), absDist
+    color(paletteRatios(map(cents, 0, 1200, 0, 1), "D0")), 
+    color(paletteRatios(map(cents, 0, 1200, 0, 1), "90")), absDist
     ));
   text(Math.round(nearestDist) + "c", xpos, ypos+3);
 }
