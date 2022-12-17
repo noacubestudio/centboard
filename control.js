@@ -1,4 +1,4 @@
-import {ratios, ratioSlot, cents, frequency, baseFreq, centsDown, centsUp, edo} from "./sketch.js";
+import {ratios, ratioSlot, cents, frequency, baseFreq, centsDown, centsUp, edo, uiblocks} from "./sketch.js";
 
 export let mouseDown = false;
 let isMouse = false;
@@ -209,24 +209,46 @@ function exactChannel(source, id) {
     }
   }
 }
+
 function setFromScreenXY(channel, x, y) {
-  
+
   channel.sourceProperties.ratiostep = undefined;
   channel.sourceProperties.edostep = undefined;
 
   function canvasSegment(y) {
-    if (y <= 200) return "slider"
-    if (y <= 400) return "keyboard"
-    return "edo"
+    let maxHeight = 0;
+    if (uiblocks.centboard.visible) {
+      maxHeight += uiblocks.centboard.height;
+      if (y <= maxHeight) return uiblocks.centboard;
+    }
+    if (uiblocks.ratioModes.visible) {
+      maxHeight += uiblocks.ratioModes.height;
+      if (y <= maxHeight) return uiblocks.ratioModes;
+    }
+    if (uiblocks.ratioKbd.visible) {
+      maxHeight += uiblocks.ratioKbd.height;
+      if (y <= maxHeight) return uiblocks.ratioKbd;
+    }
+    if (uiblocks.edoKbd.visible) {
+      return uiblocks.edoKbd;
+    }
   }
   
-  if (canvasSegment(y) === "slider") {
+  if (canvasSegment(y) === uiblocks.centboard) {
     const channelCents = screenXtoCents(x);
     channel.sourceProperties.cents = channelCents;
     // set freq
     channel.synth.freq(frequency(baseFreq, channelCents));
-    
-  } else if (canvasSegment(y) === "keyboard") { // ratio keyboard
+
+  } else if (canvasSegment(y) === uiblocks.ratioModes) {
+
+    if (ratios[ratioSlot].length > 1) {
+      const mode = screenXtoRatio(x);
+      print("mode" + mode)
+    }
+
+  } else if (canvasSegment(y) === uiblocks.ratioKbd) {
+
     if (ratios[ratioSlot].length > 1) {
       const channelRatiostep = screenXtoRatio(x);
       channel.sourceProperties.ratiostep = channelRatiostep;
@@ -235,8 +257,7 @@ function setFromScreenXY(channel, x, y) {
       // set freq
       channel.synth.freq(frequency(baseFreq, channelCents));
     }
-    
-  } else {
+  } else if (canvasSegment(y) === uiblocks.edoKbd) {
     if (edo > 1) { // edo keyboard
       const channelEDOStep = screenXtoEdo(x);
       channel.sourceProperties.edostep = channelEDOStep;

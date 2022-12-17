@@ -10,8 +10,6 @@ body {
 }
 canvas {
   display: block;
-  position: absolute;
-  top: 60px;
 }
 #top-container {
   position: absolute;
@@ -25,7 +23,7 @@ canvas {
 }
 #bottom-container {
   position: absolute;
-  top: 660px;
+  top: 60px;
 }
 #bottom-container * {
   position: relative;

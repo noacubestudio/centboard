@@ -29,7 +29,7 @@ export let edo = 12;
 let stepCents = 1200/edo;
 
 export let ratioSlot = 0;
-export let ratios = [[24,27,30,32,36,40,45,48],[4,5,6,7,8],[]];
+export let ratios = [[24,27,30,32,36,40,45,48],[4,5,6,7,8],[12,13,14,15,16,17,18,19,20,21,22,23,24]];
 
 // visual
 const palette = {
@@ -42,16 +42,26 @@ const palette = {
 
 function paletteRatios(step, hexopacity) {
   return chroma.mix(palette.ratiosbase, palette.rations1200, step, 'oklch').hex() + hexopacity;
-  //return lerpColor(
-  //  color(palette.ratiosbase + hexopacity), 
-  //  color(palette.rations1200 + hexopacity), 
-  //  step
-  //);
+}
+
+export const uiblocks = {
+  centboard: {height: 200, visible: true},
+  ratioModes: {height: 50, visible: false},
+  ratioKbd: {height: 200, visible: true},
+  edoKbd: {height: 200, visible: true}
+}
+
+function totalUIHeight() {
+  let height = 0;
+  for (const [key, block] of Object.entries(uiblocks)) {
+    if (block.visible) height += block.height
+  }
+  return height;
 }
 
 
 window.setup = () => {
-  cnv = createCanvas(windowWidth-20, 600).parent(container);
+  cnv = createCanvas(windowWidth-20, totalUIHeight()).parent(container);
   cnv.touchStarted(handleTouchStart);
   cnv.touchMoved(handleTouchMove);
   cnv.touchEnded(handleTouchEnd);
@@ -133,7 +143,7 @@ window.setup = () => {
 }
 
 window.windowResized = () => {
-  resizeCanvas(windowWidth-20, 600);
+  resizeCanvas(windowWidth-20, totalUIHeight());
 }
 
 document.ratioSlotButtonClicked = (index) => {
@@ -223,9 +233,34 @@ window.draw = () => {
   background(palette.bg);
   textAlign(LEFT);
   textSize(10);
+  push();
   
   updatePlayed();
+  const currentRatio = ratios[ratioSlot];
+  const midOctaveRatioCents = []; //set by centboard, used for edo board
 
+  if (uiblocks.centboard.visible) {
+    uiCentboard(currentRatio, midOctaveRatioCents);
+    translate(0, uiblocks.centboard.height);
+  }
+  if (uiblocks.ratioModes.visible) {
+    uiRatioModes(currentRatio);
+    translate(0, uiblocks.ratioModes.height);
+  }
+  if (uiblocks.ratioKbd.visible) {
+    uiRatioKbd(currentRatio);
+    translate(0, uiblocks.ratioKbd.height);
+  }
+  if (uiblocks.edoKbd.visible) {
+    uiEdoKbd(midOctaveRatioCents);
+  }
+  pop();
+  //const names = channels.map((channel) => channel.source);
+  //const names = playedCents.map((c) => Math.round(c)).join(",") + "  " + playedRatios.join(",") + "  " + playedSteps.join(",");
+  //text(names, 20, height-20)
+}
+
+function uiCentboard(currentRatio, midOctaveRatioCents) {
   stroke(palette.default + "80");
 
   for(let i = stepCents; i < centsDown; i += stepCents) {
@@ -251,16 +286,12 @@ window.draw = () => {
   drawCentsMarker(1200, true);
   drawCentsMarker(-1200, true);
 
-  // filled below, for later use when showing distance to these ratios in cents
-  const midOctaveRatioCents = [];
-  
-  const currentRatio = ratios[ratioSlot];
   if (currentRatio.length >= 2) {
     for (let i = 0; i < currentRatio.length; i++) { 
       const ratioCents = cents(currentRatio[0], currentRatio[i]);
       
       if (ratioCents >= 0) {
-        const ratioColor = paletteRatios(map(ratioCents, 0, 1200, 0, 1), "FF");
+        const ratioColor = paletteRatios(map(ratioCents, 0, 1200, 0, 1, true), "FF");
         stroke(ratioColor);
         fill(ratioColor);
         drawCentsMarker(ratioCents, (ratioCents % 1200 === 0));
@@ -289,39 +320,48 @@ window.draw = () => {
 
   textAlign(LEFT);
   noStroke();
+}
 
+function uiRatioModes(currentRatio) {
+  strokeWeight(2);
+  stroke(palette.bg);
 
+  if (currentRatio.length > 1) {
+    textAlign(CENTER);
 
-  // lower part
-  push();
-  translate(0, 200);
+    for (let i = 0; i < currentRatio.length; i++) {
+      drawModeButton(currentRatio, i);
+    }
+  }
+}
+
+function uiRatioKbd(currentRatio) {
+  textAlign(LEFT);
   fill(palette.ratiosbase + "DD");
   strokeWeight(2);
 
-  if (ratios[ratioSlot].length > 1) {
-    
-    text(ratios[ratioSlot].join(":") + " Ratio Keyboard (Multiplied by "+baseFreq+" Hz)", 20, 30);
-
+  if (currentRatio.length > 1) {
+    text(currentRatio.join(":") + " Ratio Keyboard (Multiplied by "+baseFreq+" Hz)", 20, 30);
     textAlign(CENTER);
 
-    for (let i = 0; i < ratios[ratioSlot].length; i++) {
+    for (let i = 0; i < currentRatio.length; i++) {
       let playingRatio = false;
       for (let p = 0; p < playedRatios.length; p++) {
         if (i === playedRatios[p] && playedRatios.length > 1) {
           playingRatio = true; break;
         }
       }
-      stroke(palette.bg);
       const ratioCents = cents(currentRatio[0], currentRatio[i]);
-      drawRatioButton(i, ratioCents, playingRatio);
+      stroke(palette.bg);
+      drawRatioButton(currentRatio, i, ratioCents, playingRatio);
     }
   } else {
     // fallback graphic
     text("Waiting for ratios input... (increasing numbers separated by \":\" like 9:10:12)", 20, 30);
   }
-  
-  // lower part again
-  translate(0, 200);
+}
+
+function uiEdoKbd(midOctaveRatioCents) {
   if (edo > 1) {
     translate(0, -40);
 
@@ -341,20 +381,6 @@ window.draw = () => {
         fill(palette.default + "40");
       }
 
-      // what ratios are closest?
-      //let closest = undefined;
-      //if (midOctaveRatioCents.length > 0) {
-      //  // only check halfway around the note with the first ratio, remove from array if found
-      //  // so the next edostep won't check it again
-      //  const distance = midOctaveRatioCents[0] - i * stepCents;
-      //  if (Math.abs(distance) < stepCents/2) {
-      //    closest = distance;
-      //    midOctaveRatioCents.shift()
-      //  } else if (distance < 0) {
-      //    midOctaveRatioCents.shift()
-      //  }
-      //}
-
       // draw
       drawEDOButton(i); //closest
     }
@@ -370,11 +396,6 @@ window.draw = () => {
     fill(palette.default + "DD");
     text(edo + " EDO Keyboard (Octave above "+baseFreq+" Hz, step size "+Number(stepCents.toFixed(2))+")", 20, 200-30);
   }
-  pop();
-  
-  //const names = channels.map((channel) => channel.source);
-  //const names = playedCents.map((c) => Math.round(c)).join(",") + "  " + playedRatios.join(",") + "  " + playedSteps.join(",");
-  //text(names, 20, height-20)
 }
 
 
@@ -426,25 +447,39 @@ function simplifiedRatio(a, b, fallback) {
   return (a !== sa) ? [sa, sb] : fallback;
 }
 
-function drawRatioButton(i, cents, playing) {
-  const notes = ratios[ratioSlot];
-  const leftEdge = map(i, 0, notes.length, 20, width-20);
-  const rightEdge = map(i+1, 0, notes.length, 20, width-20);
+function drawModeButton(ratios, i) {
+  const leftEdge = map(i, 0, ratios.length, 20, width-20);
+  const rightEdge = map(i+1, 0, ratios.length, 20, width-20);
+  const centerX = 0.5 * (leftEdge + rightEdge);
+  const centerY = 50/2;
+
+  fill(palette.default + "40");
+  stroke(palette.bg);
+  rect(leftEdge, 0, rightEdge, 50, 14);
+  noStroke();
+
+  fill(palette.default + "FF");
+  text(ratios[i], centerX, centerY);
+}
+
+function drawRatioButton(ratios, i, cents, playing) {
+  const leftEdge = map(i, 0, ratios.length, 20, width-20);
+  const rightEdge = map(i+1, 0, ratios.length, 20, width-20);
   const centerX = 0.5 * (leftEdge + rightEdge);
   const centerY = 230/2;
 
-  let fillColor = paletteRatios(map(cents, 0, 1200, 0, 1), "40");
+  let fillColor = paletteRatios(map(cents, 0, 1200, 0, 1, true), "40");
   if (playing) {
-    fillColor = paletteRatios(map(cents, 0, 1200, 0, 1), "30");
+    fillColor = paletteRatios(map(cents, 0, 1200, 0, 1, true), "30");
   } 
   fill(fillColor);
   rect(leftEdge, 50, rightEdge, 200-20, 14, 14, 24, 24);
   noStroke();
 
-  const a = Number(notes[i]);
-  const b = Number(notes[0]);
+  const a = Number(ratios[i]);
+  const b = Number(ratios[0]);
 
-  fill(paletteRatios(map(cents, 0, 1200, 0, 1), "FF"));
+  fill(paletteRatios(map(cents, 0, 1200, 0, 1, true), "FF"));
   text([a,b].join("/"), centerX, centerY-45);
 
   // simplify with fallback: undefined
@@ -455,7 +490,7 @@ function drawRatioButton(i, cents, playing) {
 
   const simplifiedString = "(" + simplified.join("/") + ")";
 
-  fill(paletteRatios(map(cents, 0, 1200, 0, 1), "CC"));
+  fill(paletteRatios(map(cents, 0, 1200, 0, 1, true), "CC"));
   text(simplifiedString, centerX,centerY-30);
 }
 
@@ -487,13 +522,13 @@ function drawEDOkeyboardRatioMarker(cents) {
   let absDist = Math.abs(nearestDist)/(stepCents*0.5);
 
   fill(lerpColor(
-    color(paletteRatios(map(cents, 0, 1200, 0, 1), "20")), 
-    color(paletteRatios(map(cents, 0, 1200, 0, 1), "10")), absDist
+    color(paletteRatios(map(cents, 0, 1200, 0, 1, true), "20")), 
+    color(paletteRatios(map(cents, 0, 1200, 0, 1, true), "10")), absDist
     ));
   ellipse(xpos,ypos, maxsize);
   fill(lerpColor(
-    color(paletteRatios(map(cents, 0, 1200, 0, 1), "E0")), 
-    color(paletteRatios(map(cents, 0, 1200, 0, 1), "A0")), absDist
+    color(paletteRatios(map(cents, 0, 1200, 0, 1, true), "E0")), 
+    color(paletteRatios(map(cents, 0, 1200, 0, 1, true), "A0")), absDist
     ));
   text(Math.round(nearestDist) + "c", xpos, ypos+3);
 }
