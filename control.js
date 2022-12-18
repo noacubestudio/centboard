@@ -142,10 +142,10 @@ window.keyPressed = () => {
     setFromKbd(channel, position);
     channel.source = "kbd";
     channel.synth.start();
-    //if (channels[0].source !== "ref") {
-    //  channels[0].source = "ref";
-    //  channels[0].synth.start();
-    //}
+    if (channels[0].source !== "ref" && refMode === "all") {
+      channels[0].source = "ref";
+      channels[0].synth.start();
+    }
 
     window.draw();
   }
