@@ -1,4 +1,4 @@
-import {handleTouchStart, handleTouchMove, handleTouchEnd, handleMouseOver, channels} from "./control.js"
+import {handleTouchStart, handleTouchMove, handleTouchEnd, handleMouseOver, channels, totalTouches} from "./control.js"
 
 // html elements
 
@@ -19,6 +19,10 @@ const waveformButtons = [
   document.getElementById("waveformButton3"),
   document.getElementById("waveformButton4")
 ];
+const referenceButtons = [
+  document.getElementById("referenceButton1"),
+  document.getElementById("referenceButton2")
+]
 
 // sound settings
 
@@ -26,6 +30,7 @@ let lpFilter;
 let waveform = "sawtooth";
 export let baseFreq = 220;
 let refCentsLower = 1200;
+export let refMode = "all";
 
 // scale settings
 
@@ -75,7 +80,9 @@ window.setup = () => {
   textFont('monospace');
   rectMode(CORNERS);
 
-  lpFilter = new p5.LowPass();
+  lpFilter = new p5.BandPass();
+  lpFilter.res(2);
+  lpFilter.freq(220);
 
   // initialize all channels
   for (let i = 0; i < 10; i++) {
@@ -116,7 +123,7 @@ window.setup = () => {
       baseFreq = inputValue;
       const refChannel = channels[0];
       refChannel.synth.freq(frequency(baseFreq, -refCentsLower));
-      draw();
+      window.draw();
     }
   });
   
@@ -125,13 +132,13 @@ window.setup = () => {
     if (!isNaN(inputValue) && inputValue > 1) {
       edo = inputValue;
       stepCents = 1200/edo;
-      draw();
+      window.draw();
     }
   });
   
   ratiosInput.addEventListener('input', (e) => {
     ratioUpdated(e.target, e.target.value);
-    draw();
+    window.draw();
   });
 
   refInput.addEventListener('input', (e) => {
@@ -141,7 +148,7 @@ window.setup = () => {
       const refChannel = channels[0];
       refChannel.synth.freq(frequency(baseFreq, -refCentsLower));
       refChannel.sourceProperties.cents = -refCentsLower;
-      draw();
+      window.draw();
     }
   });
   
@@ -161,7 +168,7 @@ document.ratioSlotButtonClicked = (index) => {
   // update styling of the buttons to show new selected and change the text
   selectButton(slotButtons, index);
 
-  draw();
+  window.draw();
 }
 document.waveformButtonClicked = (index, value) => {
   //update selection
@@ -172,6 +179,12 @@ document.waveformButtonClicked = (index, value) => {
   }
   // button states
   selectButton(waveformButtons, index);
+}
+document.referenceButtonClicked = (index) => {
+  //update selection
+  if (index === 0) {refMode = "all"} else {refMode = "centboard"}
+  // button states
+  selectButton(referenceButtons, index);
 }
 
 function selectButton(elArray, index) {
@@ -209,7 +222,7 @@ document.stepperButtonClicked = (offset) => {
   edo = max(edo, 2);
   stepCents = 1200/edo;
   edoInput.value = edo;
-  draw();
+  window.draw();
 }
 
 
@@ -217,26 +230,32 @@ document.stepperButtonClicked = (offset) => {
 let playedCents = []; // every channel ends up here
 let playedRatios = []; // ratio keyboard via mouse/touch
 let playedSteps = []; // step keyboard via mouse/touch/kbd
+let refCents = undefined;
 
 function updatePlayed() {
   playedCents = [];
   playedRatios = [];
   playedSteps = [];
+  refCents = undefined;
   
-  channels.forEach((channel)=>{
+  channels.forEach((channel, index)=>{
     if (channel.source !== "off") {
       const cents = channel.sourceProperties.cents;
       const ratiostep = channel.sourceProperties.ratiostep;
       const edostep = channel.sourceProperties.edostep;
 
-      if (cents !== undefined) {
-        playedCents.push(cents)
-      }
-      if (ratiostep !== undefined) {
-        playedRatios.push(ratiostep);
-      }
-      if (edostep !== undefined) {
-        playedSteps.push(edostep);
+      if (index === 0) {
+        refCents = cents;
+      } else {
+        if (cents !== undefined) {
+          playedCents.push(cents);
+        }
+        if (ratiostep !== undefined) {
+          playedRatios.push(ratiostep);
+        }
+        if (edostep !== undefined) {
+          playedSteps.push(edostep);
+        }
       }
     }
   });
@@ -247,7 +266,7 @@ window.draw = () => {
   textAlign(LEFT);
   textSize(10);
   push();
-  
+
   updatePlayed();
   const currentRatio = ratios[ratioSlot];
   const midOctaveRatioCents = []; //set by centboard, used for edo board
@@ -268,9 +287,9 @@ window.draw = () => {
     uiEdoKbd(midOctaveRatioCents);
   }
   pop();
-  //const names = channels.map((channel) => channel.source);
-  //const names = playedCents.map((c) => Math.round(c)).join(",") + "  " + playedRatios.join(",") + "  " + playedSteps.join(",");
-  //text(names, 20, height-20)
+  //fill("gray")
+  //text(channels.map((channel) => channel.source), 400, height-40)
+  //text(totalTouches, 400, height-20)
 }
 
 function uiCentboard(currentRatio, midOctaveRatioCents) {
@@ -322,6 +341,11 @@ function uiCentboard(currentRatio, midOctaveRatioCents) {
 
   // draw played cents
   playedCents.forEach((c) => {
+    drawPlayedCentsMarker(c)
+  });
+  if (refCents !== undefined) drawPlayedCentsMarker(refCents)
+
+  function drawPlayedCentsMarker (c) {
     stroke(palette.play);
     fill(palette.play);
     drawCentsMarker(c);
@@ -329,7 +353,7 @@ function uiCentboard(currentRatio, midOctaveRatioCents) {
     text(Math.round(c) + " c", map(c, -centsDown, centsUp, 0, width), 20);
     const f = frequency(baseFreq, c);
     text(Math.round(f*10)/10 + " Hz", map(c, -centsDown, centsUp, 0, width), 40);
-  });
+  }
 
   textAlign(LEFT);
   noStroke();
@@ -339,7 +363,7 @@ function uiRatioModes(currentRatio) {
   strokeWeight(2);
   stroke(palette.bg);
 
-  if (currentRatio.length > 1) {
+  if (currentRatio.length > 0) {
     textAlign(CENTER);
 
     for (let i = 0; i < currentRatio.length; i++) {
@@ -348,25 +372,25 @@ function uiRatioModes(currentRatio) {
   }
 }
 
-function uiRatioKbd(currentRatio) {
+function uiRatioKbd(ratios) {
   textAlign(LEFT);
   fill(palette.ratiosbase + "DD");
   strokeWeight(2);
 
-  if (currentRatio.length > 1) {
-    text(currentRatio.join(":") + " Ratio Keyboard (Multiplied by "+baseFreq+" Hz)", 20, 30);
+  if (ratios.length > 0) {
+    text(ratios.join(":") + " Ratio Keyboard (Multiplied by "+baseFreq+" Hz)", 20, 30);
     textAlign(CENTER);
 
-    for (let i = 0; i < currentRatio.length; i++) {
+    for (let i = 0; i < ratios.length; i++) {
       let playingRatio = false;
       for (let p = 0; p < playedRatios.length; p++) {
-        if (i === playedRatios[p] && playedRatios.length > 1) {
+        if (i === playedRatios[p]) {
           playingRatio = true; break;
         }
       }
-      const ratioCents = cents(currentRatio[0], currentRatio[i]);
+      const ratioCents = cents(ratios[0], ratios[i]);
       stroke(palette.bg);
-      drawRatioButton(currentRatio, i, ratioCents, playingRatio);
+      drawRatioButton(ratios, i, ratioCents, playingRatio);
     }
   } else {
     // fallback graphic
@@ -383,7 +407,7 @@ function uiEdoKbd(midOctaveRatioCents) {
       // is this step currently playing?
       let playingStep = false;
       for (let p = 0; p < playedSteps.length; p++) {
-        if (i === playedSteps[p] && playedSteps.length > 1) {
+        if (i === playedSteps[p]) {
           playingStep = true; break;
         }
       }

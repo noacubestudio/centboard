@@ -1,9 +1,9 @@
-import {ratios, ratioSlot, cents, frequency, baseFreq, centsDown, centsUp, edo, uiblocks} from "./sketch.js";
+import {ratios, ratioSlot, cents, frequency, baseFreq, centsDown, centsUp, edo, uiblocks, refMode} from "./sketch.js";
 
 export let mouseDown = false;
 let isMouse = false;
-let kbdPressed = 0;
-let touchPressed = 0;
+let totalKbd = 0;
+export let totalTouches = 0;
 
 export const channels = [];
 // initialed with 10 channels, 
@@ -35,11 +35,7 @@ window.mousePressed = () => {
   
   const channel = channels[firstChannel("off")];
   if (channel !== undefined) {
-    setFromScreenXY(channel, mouseX, mouseY);
-    channel.source = "mouse";
-    channel.synth.start();
-    channels[0].source = "ref";
-    channels[0].synth.start();
+    setFromScreenXY(channel, mouseX, mouseY, "mouse");
 
     window.draw();
   }
@@ -54,9 +50,14 @@ window.mouseReleased = () => {
     channel.source = "off";
     channel.sourceProperties = {};
     channel.synth.stop();
-    if (nothingOn()) {
-      channels[0].source = "off";
-      channels[0].synth.stop();
+    if (countInputs() === 0) {
+      channels.forEach((channel, index) => {
+        if (index !== 0) {channel.sourceProperties = {}}
+        channel.source = "off";
+        channel.synth.stop();
+      })
+      //channels[0].source = "off";
+      //channels[0].synth.stop();
     }
     
     window.draw();
@@ -68,6 +69,7 @@ export function handleMouseOver() {
 }
 
 export function handleTouchStart(event) {
+  if (event.touches !== undefined) totalTouches = event.touches.length;
   userStartAudio();
   event.preventDefault();
   event.changedTouches.forEach((touch) => {
@@ -75,17 +77,9 @@ export function handleTouchStart(event) {
     const x = touch.clientX; const y = touch.clientY - 60;
     if (outsideCanvas(x, y)) return;
     
-    touchPressed++;
     const channel = channels[firstChannel("off")];
     if (channel !== undefined) {
-      setFromScreenXY(channel, x, y);
-      channel.source = "touch";
-      channel.sourceProperties.id = id;
-      channel.synth.start();
-      if (channels[0].source !== "ref") {
-        channels[0].source = "ref";
-        channels[0].synth.start();
-      }
+      setFromScreenXY(channel, x, y, "touch", id);
 
       window.draw();
     }
@@ -109,19 +103,24 @@ export function handleTouchMove(event) {
 }
 
 export function handleTouchEnd(event) {
+  if (event.touches !== undefined) totalTouches = event.touches.length;
   event.changedTouches.forEach((touch) => {
     const id = touch.identifier;
     //const x = touch.clientX; const y = touch.clientY - 60;
     
-    touchPressed--;
     const channel = channels[exactChannel("touch", id)];
     if (channel !== undefined) {
       channel.source = "off";
       channel.sourceProperties = {};
       channel.synth.stop();
-      if (nothingOn()) {
-        channels[0].source = "off";
-        channels[0].synth.stop();
+      if (countInputs() === 0) {
+        channels.forEach((channel, index) => {
+          if (index !== 0) {channel.sourceProperties = {}}
+          channel.source = "off";
+          channel.synth.stop();
+        })
+        // channels[0].source = "off";
+        // channels[0].synth.stop();
       }
       
       window.draw();
@@ -134,7 +133,7 @@ window.keyPressed = () => {
   if (document.activeElement.type !== undefined) return
   if (!"1234567890".includes(key)) return
   userStartAudio();
-  kbdPressed++;
+  totalKbd++;
   
   const position = (key === "0") ? 10 : Number(key);
 
@@ -143,10 +142,10 @@ window.keyPressed = () => {
     setFromKbd(channel, position);
     channel.source = "kbd";
     channel.synth.start();
-    if (channels[0].source !== "ref") {
-      channels[0].source = "ref";
-      channels[0].synth.start();
-    }
+    //if (channels[0].source !== "ref") {
+    //  channels[0].source = "ref";
+    //  channels[0].synth.start();
+    //}
 
     window.draw();
   }
@@ -156,7 +155,7 @@ window.keyReleased = () => {
   
   if (document.activeElement.type !== undefined) return
   if (!"1234567890".includes(key)) return
-  kbdPressed--;
+  totalKbd--;
   const position = (key === "0") ? 10 : Number(key);
 
   const channel = channels[exactChannel("kbd", position)];
@@ -164,7 +163,7 @@ window.keyReleased = () => {
     channel.source = "off";
     channel.sourceProperties = {};
     channel.synth.stop();
-    if (nothingOn()) {
+    if (countInputs() === 0) {
       channels[0].source = "off";
       channels[0].synth.stop();
     }
@@ -175,8 +174,10 @@ window.keyReleased = () => {
 }
 
 
-function nothingOn() {
-  return (!mouseDown && kbdPressed === 0 && touchPressed === 0)
+function countInputs() {
+  let total = totalKbd + totalTouches;
+  if (mouseDown) total++;
+  return total;
 }
 
 function outsideCanvas(x, y) {
@@ -210,7 +211,7 @@ function exactChannel(source, id) {
   }
 }
 
-function setFromScreenXY(channel, x, y) {
+function setFromScreenXY(channel, x, y, initType, id) {
 
   channel.sourceProperties.ratiostep = undefined;
   channel.sourceProperties.edostep = undefined;
@@ -239,6 +240,7 @@ function setFromScreenXY(channel, x, y) {
     channel.sourceProperties.cents = channelCents;
     // set freq
     channel.synth.freq(frequency(baseFreq, channelCents));
+    if (initType !== undefined) initChannel(channel, uiblocks.centboard, initType, id);
 
   } else if (canvasSegment(y) === uiblocks.ratioModes) {
 
@@ -256,6 +258,7 @@ function setFromScreenXY(channel, x, y) {
       channel.sourceProperties.cents = channelCents;
       // set freq
       channel.synth.freq(frequency(baseFreq, channelCents));
+      if (initType !== undefined) initChannel(channel, uiblocks.ratioKbd, initType, id);
     }
   } else if (canvasSegment(y) === uiblocks.edoKbd) {
     if (edo > 1) { // edo keyboard
@@ -265,7 +268,18 @@ function setFromScreenXY(channel, x, y) {
       channel.sourceProperties.cents = channelCents;
       // set freq
       channel.synth.freq(frequency(baseFreq, channelCents));
+      if (initType !== undefined) initChannel(channel, uiblocks.edoKbd, initType, id);
     }
+  }
+}
+
+function initChannel(channel, segment, type, id) {
+  channel.source = type;
+  if (type === "touch") channel.sourceProperties.id = id;
+  channel.synth.start();
+  if (refMode === "all" || segment === uiblocks.centboard) {
+    channels[0].source = "ref";
+    channels[0].synth.start();
   }
 }
 
