@@ -29,29 +29,23 @@
       </div>
       <div id="bottom-container">
         <div id="canvas-container" touch-action="none"></div>
-        <label>
+        <div id="settingsGroup">
           <span class="rowlabel">Waveform</span>
-          <div id="waveforms">
-            <input type="radio" id="c1" name="waveform" value="sine" onclick="waveformRadioClicked(this)">
-            <label for="c1">Sine</label>
-            <input type="radio" id="c2" name="waveform" value="square" onclick="waveformRadioClicked(this)">
-            <label for="c2">Square</label>
-            <input type="radio" id="c3" name="waveform" value="triangle" onclick="waveformRadioClicked(this)">
-            <label for="c3">Triangle</label>
-            <input type="radio" id="c4" name="waveform" value="sawtooth" onclick="waveformRadioClicked(this)" checked>
-            <label for="c4">Sawtooth</label>
-          </div>
-        </label>
-        <label>
+          <button class="waveformButton" id="waveformButton1" type="button" onclick="waveformButtonClicked(0, 'sine')">Sine</button>
+          <button class="waveformButton" id="waveformButton2" type="button" onclick="waveformButtonClicked(1, 'square')">Square</button>
+          <button class="waveformButton" id="waveformButton3" type="button" onclick="waveformButtonClicked(2, 'triangle')">Triangle</button>
+          <button class="waveformButton buttonSelected" id="waveformButton4" type="button" onclick="waveformButtonClicked(3, 'sawtooth')">Sawtooth</button>
+        </div>
+        <div id="settingsGroup">
           <span class="rowlabel">Middle Freq.</span>
           <input type="number" id="base" value="" />
           <span>Hz</span>
-        </label>
-        <label>
+        </div>
+        <div id="settingsGroup">
           <span class="rowlabel">Reference Tone</span>
           <input type="number" id="ref" value="" />
           <span>cents lower</span>
-        </label>
+        </div>
       </div>
     </main>
     <script type="module" src="sketch.js"></script>

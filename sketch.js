@@ -13,6 +13,12 @@ const slotButtons = [
   document.getElementById("slotButton2"),
   document.getElementById("slotButton3")
 ];
+const waveformButtons = [
+  document.getElementById("waveformButton1"),
+  document.getElementById("waveformButton2"),
+  document.getElementById("waveformButton3"),
+  document.getElementById("waveformButton4")
+];
 
 // sound settings
 
@@ -153,15 +159,29 @@ document.ratioSlotButtonClicked = (index) => {
   ratioUpdated(ratiosInput, ratios[ratioSlot].join(":"), oldRatioSlot);
 
   // update styling of the buttons to show new selected and change the text
-  slotButtons.forEach((slot, sIndex) => {
-    if (sIndex === index) {
-      slot.classList.add('buttonSelected');
-    } else {
-      slot.classList.remove('buttonSelected');
-    }
-  });
+  selectButton(slotButtons, index);
 
   draw();
+}
+document.waveformButtonClicked = (index, value) => {
+  //update selection
+  waveform = value;
+  print(waveform)
+  for (let i = 0; i < channels.length; i++) {
+    channels[i].synth.setType(waveform);
+  }
+  // button states
+  selectButton(waveformButtons, index);
+}
+
+function selectButton(elArray, index) {
+  elArray.forEach((el, elIndex) => {
+    if (elIndex === index) {
+      el.classList.add('buttonSelected');
+    } else {
+      el.classList.remove('buttonSelected');
+    }
+  });
 }
 
 function ratioUpdated(el, input, oldslot) {
@@ -182,13 +202,6 @@ function ratioUpdated(el, input, oldslot) {
   //also update the correct button
   const firstRatio = (ratios[ratioSlot][0] !== "") ? ratios[ratioSlot][0]+":" : "+";
   slotButtons[ratioSlot].innerText = firstRatio;
-}
-
-document.waveformRadioClicked = (el) => {
-  waveform = el.value;
-  for (let i = 0; i < channels.length; i++) {
-    channels[i].synth.setType(waveform);
-  }
 }
 
 document.stepperButtonClicked = (offset) => {
