@@ -30,7 +30,7 @@ let lpFilter;
 let waveform = "sawtooth";
 export let baseFreq = 220;
 let refCentsLower = 1200;
-export let refMode = "all";
+export let refMode = "on";
 
 // scale settings
 
@@ -182,7 +182,7 @@ document.waveformButtonClicked = (index, value) => {
 }
 document.referenceButtonClicked = (index) => {
   //update selection
-  if (index === 0) {refMode = "all"} else {refMode = "centboard"}
+  if (index === 0) {refMode = "off"} else {refMode = "on"}
   // button states
   selectButton(referenceButtons, index);
 }

@@ -43,10 +43,10 @@
         </div>
         <div id="settingsGroup">
           <span class="rowlabel">Reference Tone</span>
+          <button class="referenceButton" id="referenceButton1" type="button" onclick="referenceButtonClicked(0)">Off</button>
+          <button class="referenceButton buttonSelected" id="referenceButton2" type="button" onclick="referenceButtonClicked(1)">On</button>
           <input type="number" id="ref" value="" />
           <span>cents lower</span>
-          <button class="referenceButton buttonSelected" id="referenceButton1" type="button" onclick="referenceButtonClicked(0)">Always</button>
-          <button class="referenceButton" id="referenceButton2" type="button" onclick="referenceButtonClicked(1)">Slider only</button>
         </div>
       </div>
     </main>

@@ -142,7 +142,7 @@ window.keyPressed = () => {
     setFromKbd(channel, position);
     channel.source = "kbd";
     channel.synth.start();
-    if (channels[0].source !== "ref" && refMode === "all") {
+    if (channels[0].source !== "ref" && refMode === "on") {
       channels[0].source = "ref";
       channels[0].synth.start();
     }
@@ -277,7 +277,7 @@ function initChannel(channel, segment, type, id) {
   channel.source = type;
   if (type === "touch") channel.sourceProperties.id = id;
   channel.synth.start();
-  if (refMode === "all" || segment === uiblocks.centboard) {
+  if (refMode === "on") {
     channels[0].source = "ref";
     channels[0].synth.start();
   }
