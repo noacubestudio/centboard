@@ -27,6 +27,7 @@ const referenceButtons = [
 // sound settings
 
 let lpFilter;
+let reverb; let basereverb;
 let waveform = "sawtooth";
 export let baseFreq = 220;
 let refCentsLower = 1200;
@@ -81,8 +82,18 @@ window.setup = () => {
   rectMode(CORNERS);
 
   lpFilter = new p5.BandPass();
-  lpFilter.res(2);
+  lpFilter.res(1);
   lpFilter.freq(220);
+
+  reverb = new p5.Reverb();
+  reverb.disconnect();
+  reverb.process(lpFilter, 2, 10);
+  reverb.connect(lpFilter);
+
+  basereverb = new p5.Reverb();
+  basereverb.disconnect();
+  basereverb.process(lpFilter, 0.1, 1);
+  basereverb.connect(lpFilter);
 
   // initialize all channels
   for (let i = 0; i < 10; i++) {
@@ -92,7 +103,12 @@ window.setup = () => {
     let sourceProperties = {};
     
     synth.disconnect();
-    synth.connect(lpFilter);
+    if (i > 0) {
+      synth.connect(reverb);
+    } else {
+      synth.connect(basereverb);
+    }
+    
     synth.setType(waveform);
     synth.freq(baseFreq)
     synth.amp(0.5);
